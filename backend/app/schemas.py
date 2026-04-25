@@ -1,5 +1,5 @@
-from datetime import datetime
-from pydantic import BaseModel, Field
+from datetime import datetime, timezone
+from pydantic import BaseModel, Field, field_serializer
 
 
 class ORMBase(BaseModel):
@@ -38,6 +38,13 @@ class BoardInfo(ORMBase):
     has_password: bool
     is_readonly_default: bool
     created_at: datetime
+
+    @field_serializer("expires_at", "created_at")
+    def serialize_dt(self, v: datetime, _info) -> str:
+        """Ensure naive UTC datetimes are serialized with Z suffix."""
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        return v.isoformat()
 
     @classmethod
     def from_board(cls, board) -> "BoardInfo":
@@ -81,6 +88,12 @@ class CardInfo(ORMBase):
     votes: int
     color: str
     created_at: datetime
+
+    @field_serializer("created_at")
+    def serialize_dt(self, v: datetime, _info) -> str:
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        return v.isoformat()
 
 
 class BoardFull(BaseModel):

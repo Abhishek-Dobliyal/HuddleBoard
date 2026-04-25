@@ -24,11 +24,17 @@ export const useWsStore = defineStore('ws', () => {
     }
 
     ws.onmessage = (event) => {
-      handleMessage(JSON.parse(event.data))
+      try {
+        handleMessage(JSON.parse(event.data))
+      } catch (err) {
+        console.error('Failed to parse WebSocket message:', err)
+      }
     }
 
     ws.onclose = () => {
       connected.value = false
+      const { showToast } = useToast()
+      showToast('Connection lost. Reconnecting...', 'warning')
       scheduleReconnect(id, adminToken)
     }
 

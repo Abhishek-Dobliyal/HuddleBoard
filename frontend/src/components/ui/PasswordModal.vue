@@ -1,17 +1,24 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
+const props = defineProps({
+  error: { type: String, default: '' },
+})
 const emit = defineEmits(['submit'])
 
 const password = ref('')
-const error = ref('')
+const localError = ref('')
+
+watch(() => props.error, (val) => {
+  localError.value = val
+})
 
 function handleSubmit() {
   if (!password.value.trim()) {
-    error.value = 'Password is required'
+    localError.value = 'Password is required'
     return
   }
-  error.value = ''
+  localError.value = ''
   emit('submit', password.value)
 }
 </script>
@@ -40,7 +47,7 @@ function handleSubmit() {
           enter-active-class="animate__animated animate__shakeX animate__faster"
           leave-active-class="animate__animated animate__fadeOut animate__faster"
         >
-          <p v-if="error" class="text-sm text-red-500 mb-3">{{ error }}</p>
+          <p v-if="localError" class="text-sm text-red-500 mb-3">{{ localError }}</p>
         </transition>
 
         <button

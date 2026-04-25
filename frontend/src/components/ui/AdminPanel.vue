@@ -18,15 +18,23 @@ const { showToast } = useToast()
 
 const confirmDelete = ref(false)
 
-function copyShareUrl() {
-  navigator.clipboard.writeText(props.shareUrl)
-  showToast('Share link copied!', 'success')
+async function copyShareUrl() {
+  try {
+    await navigator.clipboard.writeText(props.shareUrl)
+    showToast('Share link copied!', 'success')
+  } catch {
+    showToast('Failed to copy link.', 'error')
+  }
 }
 
-function copyAdminUrl() {
-  const adminUrl = `${props.shareUrl}?admin=${boardStore.adminToken}`
-  navigator.clipboard.writeText(adminUrl)
-  showToast('Admin link copied! Keep this private.', 'success')
+async function copyAdminUrl() {
+  try {
+    const adminUrl = `${props.shareUrl}?admin=${boardStore.adminToken}`
+    await navigator.clipboard.writeText(adminUrl)
+    showToast('Admin link copied! Keep this private.', 'success')
+  } catch {
+    showToast('Failed to copy link.', 'error')
+  }
 }
 
 async function toggleReadOnly() {
@@ -38,8 +46,8 @@ async function toggleReadOnly() {
       boardStore.board.is_readonly_default ? 'Board is now read-only' : 'Board is now editable',
       'info',
     )
-  } catch (err) {
-    // handled
+  } catch {
+    showToast('Failed to update board settings.', 'error')
   }
 }
 
@@ -48,8 +56,9 @@ async function handleDelete() {
     await boardStore.deleteBoard(props.boardId)
     showToast('Board deleted', 'info')
     router.push('/')
-  } catch (err) {
-    // handled
+  } catch {
+    showToast('Failed to delete board. Please try again.', 'error')
+    confirmDelete.value = false
   }
 }
 </script>

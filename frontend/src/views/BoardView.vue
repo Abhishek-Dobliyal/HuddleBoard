@@ -18,7 +18,9 @@ const { showToast } = useToast()
 const boardId = route.params.id
 const adminToken = route.query.admin || null
 const needsPassword = ref(false)
+const passwordError = ref('')
 const showAdmin = ref(false)
+const loadError = ref(null)
 
 if (adminToken) {
   boardStore.setAdminToken(adminToken)
@@ -30,12 +32,17 @@ const { display: countdownDisplay, isExpired } = useCountdown(
 
 const shareUrl = computed(() => `${window.location.origin}/board/${boardId}`)
 
-function copyShareUrl() {
-  navigator.clipboard.writeText(shareUrl.value)
-  showToast('Share link copied!', 'success')
+async function copyShareUrl() {
+  try {
+    await navigator.clipboard.writeText(shareUrl.value)
+    showToast('Share link copied!', 'success')
+  } catch {
+    showToast('Failed to copy link.', 'error')
+  }
 }
 
 async function loadBoard(password = null) {
+  loadError.value = null
   try {
     await boardStore.fetchBoard(boardId, password)
     needsPassword.value = false
@@ -43,8 +50,11 @@ async function loadBoard(password = null) {
   } catch (err) {
     if (err.response?.status === 401) {
       needsPassword.value = true
+      passwordError.value = password ? 'Incorrect password. Please try again.' : ''
     } else if (err.response?.status === 404 || err.response?.status === 410) {
       router.push({ name: 'not-found' })
+    } else {
+      loadError.value = err.response?.data?.detail || 'Failed to load board. Please check your connection and try again.'
     }
   }
 }
@@ -58,12 +68,26 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <PasswordModal v-if="needsPassword" @submit="loadBoard" />
+  <div>
+  <PasswordModal v-if="needsPassword" :error="passwordError" @submit="loadBoard" />
 
   <div v-else-if="boardStore.loading" class="min-h-screen flex items-center justify-center">
     <div class="text-center animate__animated animate__fadeIn">
       <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto"></div>
       <p class="mt-4 text-gray-500">Loading board...</p>
+    </div>
+  </div>
+
+  <div v-else-if="loadError" class="min-h-screen flex items-center justify-center">
+    <div class="text-center p-8 animate__animated animate__fadeIn">
+      <div class="text-5xl mb-4">
+        <font-awesome-icon icon="triangle-exclamation" class="text-red-400" />
+      </div>
+      <h2 class="text-2xl font-bold text-gray-800">Something went wrong</h2>
+      <p class="text-gray-500 mt-2">{{ loadError }}</p>
+      <button @click="loadBoard()" class="mt-6 inline-block px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer">
+        Try Again
+      </button>
     </div>
   </div>
 
@@ -157,5 +181,6 @@ onUnmounted(() => {
       :share-url="shareUrl"
       @close="showAdmin = false"
     />
+  </div>
   </div>
 </template>

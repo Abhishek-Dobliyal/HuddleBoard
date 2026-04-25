@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useBoardStore } from '../../stores/board'
 import { useWsStore } from '../../stores/ws'
+import { useToast } from '../../composables/useToast'
 
 const props = defineProps({
   boardId: { type: String, required: true },
@@ -10,6 +11,7 @@ const props = defineProps({
 
 const boardStore = useBoardStore()
 const wsStore = useWsStore()
+const { showToast } = useToast()
 
 const text = ref('')
 const authorName = ref(localStorage.getItem('hb_author') || '')
@@ -50,6 +52,8 @@ async function handleSubmit() {
 
     text.value = ''
     selectedColor.value = stickyColors[Math.floor(Math.random() * stickyColors.length)]
+  } catch {
+    showToast('Failed to add card. Please try again.', 'error')
   } finally {
     isSubmitting.value = false
   }

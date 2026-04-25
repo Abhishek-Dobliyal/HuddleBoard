@@ -2,6 +2,7 @@
 import { ref, nextTick } from 'vue'
 import { useBoardStore } from '../../stores/board'
 import { useWsStore } from '../../stores/ws'
+import { useToast } from '../../composables/useToast'
 
 const props = defineProps({
   card: { type: Object, required: true },
@@ -10,11 +11,13 @@ const props = defineProps({
 
 const boardStore = useBoardStore()
 const wsStore = useWsStore()
+const { showToast } = useToast()
 
 const isEditing = ref(false)
 const editText = ref('')
 const editInput = ref(null)
 const isVoting = ref(false)
+const isDeleting = ref(false)
 const showConfirmDelete = ref(false)
 
 const stickyColors = {
@@ -41,9 +44,13 @@ async function saveEdit() {
     isEditing.value = false
     return
   }
-  const updated = await boardStore.updateCard(props.card.id, trimmed)
-  wsStore.send('card:update', { card_id: updated.id, text: updated.text })
-  isEditing.value = false
+  try {
+    const updated = await boardStore.updateCard(props.card.id, trimmed)
+    wsStore.send('card:update', { card_id: updated.id, text: updated.text })
+    isEditing.value = false
+  } catch {
+    showToast('Failed to update card. Please try again.', 'error')
+  }
 }
 
 function cancelEdit() {
@@ -56,15 +63,26 @@ async function handleVote() {
   try {
     const updated = await boardStore.voteCard(props.card.id)
     wsStore.send('card:vote', { card_id: updated.id, votes: updated.votes })
+  } catch {
+    showToast('Failed to register vote.', 'error')
   } finally {
     isVoting.value = false
   }
 }
 
 async function handleDelete() {
-  await boardStore.deleteCard(props.card.id)
-  wsStore.send('card:delete', { card_id: props.card.id })
-  showConfirmDelete.value = false
+  if (isDeleting.value) return
+  isDeleting.value = true
+  try {
+    await boardStore.deleteCard(props.card.id)
+    wsStore.send('card:delete', { card_id: props.card.id })
+    showConfirmDelete.value = false
+  } catch {
+    showToast('Failed to delete card.', 'error')
+    showConfirmDelete.value = false
+  } finally {
+    isDeleting.value = false
+  }
 }
 </script>
 
