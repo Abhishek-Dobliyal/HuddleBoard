@@ -1,5 +1,4 @@
 import logging
-import asyncio
 from sqlalchemy import delete
 from app.database import async_session
 from app.models import Board, utcnow
@@ -16,12 +15,3 @@ async def cleanup_expired_boards() -> None:
         await session.commit()
         if result.rowcount > 0:
             logger.info("Cleaned up %d expired board(s)", result.rowcount)
-
-
-def run_cleanup() -> None:
-    """Synchronous wrapper for APScheduler."""
-    loop = asyncio.new_event_loop()
-    try:
-        loop.run_until_complete(cleanup_expired_boards())
-    finally:
-        loop.close()

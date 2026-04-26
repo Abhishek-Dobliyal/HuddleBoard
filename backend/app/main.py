@@ -3,7 +3,7 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
 from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +17,7 @@ from app.limiter import limiter
 from app.models import Board, utcnow
 from app.routers import boards, cards
 from app.routers.boards import verify_password
-from app.tasks import run_cleanup
+from app.tasks import cleanup_expired_boards
 from app.ws.manager import manager
 
 load_dotenv()
@@ -25,7 +25,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-scheduler = BackgroundScheduler()
+scheduler = AsyncIOScheduler()
 cleanup_interval = int(os.getenv("TTL_CLEANUP_INTERVAL_MINUTES", "15"))
 
 WS_EVENT_MAP: dict[str, str] = {
@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
     logger.info("Database tables created")
 
     scheduler.add_job(
-        run_cleanup, "interval", minutes=cleanup_interval, id="ttl_cleanup"
+        cleanup_expired_boards, "interval", minutes=cleanup_interval, id="ttl_cleanup"
     )
     scheduler.start()
     logger.info("TTL cleanup scheduler started (every %d min)", cleanup_interval)
