@@ -3,13 +3,14 @@ import { ref } from 'vue'
 import { useBoardStore } from './board'
 import { useToast } from '../composables/useToast'
 import { buildWsUrl } from '../lib/api'
-import { WS_RECONNECT_DELAY_MS } from '../constants/board'
+import { WS_RECONNECT_BASE_MS, WS_RECONNECT_MAX_MS, WS_RECONNECT_MAX_RETRIES } from '../constants/board'
 
 export const useWsStore = defineStore('ws', () => {
   const socket = ref(null)
   const connected = ref(false)
   const reconnectTimer = ref(null)
   let connectOpts = {}
+  let retryCount = 0
 
   function connect(boardId, opts = {}) {
     connectOpts = { boardId, ...opts }
@@ -20,6 +21,7 @@ export const useWsStore = defineStore('ws', () => {
 
     ws.onopen = () => {
       connected.value = true
+      retryCount = 0
       clearReconnectTimer()
     }
 
@@ -36,8 +38,6 @@ export const useWsStore = defineStore('ws', () => {
       if (event.code >= 4000 && event.code < 5000) {
         return
       }
-      const { showToast } = useToast()
-      showToast('Connection lost. Reconnecting...', 'warning')
       scheduleReconnect()
     }
 
@@ -96,6 +96,7 @@ export const useWsStore = defineStore('ws', () => {
 
   function disconnect() {
     clearReconnectTimer()
+    retryCount = 0
     if (socket.value) {
       socket.value.onclose = null
       socket.value.close()
@@ -106,9 +107,20 @@ export const useWsStore = defineStore('ws', () => {
 
   function scheduleReconnect() {
     clearReconnectTimer()
+    const { showToast } = useToast()
+
+    if (retryCount >= WS_RECONNECT_MAX_RETRIES) {
+      showToast('Could not reconnect. Please refresh the page.', 'error')
+      return
+    }
+
+    const delay = Math.min(WS_RECONNECT_BASE_MS * 2 ** retryCount, WS_RECONNECT_MAX_MS)
+    retryCount++
+
+    showToast(`Connection lost. Retrying in ${Math.round(delay / 1000)}s...`, 'warning')
     reconnectTimer.value = setTimeout(
       () => connect(connectOpts.boardId, connectOpts),
-      WS_RECONNECT_DELAY_MS,
+      delay,
     )
   }
 

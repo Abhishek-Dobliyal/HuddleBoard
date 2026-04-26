@@ -32,4 +32,6 @@ export const STICKY_PICKER_CLASSES = {
 
 export const STORAGE_KEY_AUTHOR = 'hb_author'
 
-export const WS_RECONNECT_DELAY_MS = 3000
+export const WS_RECONNECT_BASE_MS = 1000
+export const WS_RECONNECT_MAX_MS = 30000
+export const WS_RECONNECT_MAX_RETRIES = 10

@@ -16,7 +16,8 @@ const wsStore = useWsStore()
 const { copy } = useClipboard()
 
 const boardId = route.params.id
-const adminToken = route.query.admin || null
+const STORAGE_KEY = `hb_admin_${boardId}`
+const adminToken = route.query.admin || sessionStorage.getItem(STORAGE_KEY) || null
 const needsPassword = ref(false)
 const passwordModalRef = ref(null)
 const showAdmin = ref(false)
@@ -24,6 +25,10 @@ const loadError = ref(null)
 
 if (adminToken) {
   boardStore.setAdminToken(adminToken)
+  sessionStorage.setItem(STORAGE_KEY, adminToken)
+  if (route.query.admin) {
+    router.replace({ query: { ...route.query, admin: undefined } })
+  }
 }
 
 const { display: countdownDisplay, isExpired } = useCountdown(

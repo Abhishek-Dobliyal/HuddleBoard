@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -42,7 +42,7 @@ def assert_writable(board, admin_token: str | None) -> None:
 async def create_card(
     board_id: str,
     payload: CardCreate,
-    admin_token: str | None = Query(None),
+    x_admin_token: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ) -> CardInfo:
     """Add a card to a column on a board."""
@@ -56,7 +56,7 @@ async def create_card(
         raise HTTPException(status_code=404, detail="Column not found on this board")
 
     assert_not_expired(column.board)
-    assert_writable(column.board, admin_token)
+    assert_writable(column.board, x_admin_token)
 
     card = Card(
         column_id=payload.column_id,
@@ -73,13 +73,13 @@ async def create_card(
 async def update_card(
     card_id: str,
     payload: CardUpdate,
-    admin_token: str | None = Query(None),
+    x_admin_token: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ) -> CardInfo:
     """Update card text."""
     card = await get_card_with_board(card_id, db)
     assert_not_expired(card.column.board)
-    assert_writable(card.column.board, admin_token)
+    assert_writable(card.column.board, x_admin_token)
 
     card.text = payload.text
     return CardInfo.model_validate(card)
@@ -89,7 +89,7 @@ async def update_card(
 async def move_card(
     card_id: str,
     payload: CardMove,
-    admin_token: str | None = Query(None),
+    x_admin_token: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ) -> CardInfo:
     """Move a card to a different column."""
@@ -109,7 +109,7 @@ async def move_card(
         raise HTTPException(status_code=400, detail="Cannot move card across boards")
 
     assert_not_expired(target_column.board)
-    assert_writable(target_column.board, admin_token)
+    assert_writable(target_column.board, x_admin_token)
 
     card.column_id = payload.column_id
     return CardInfo.model_validate(card)
@@ -118,13 +118,13 @@ async def move_card(
 @router.delete("/api/cards/{card_id}")
 async def delete_card(
     card_id: str,
-    admin_token: str | None = Query(None),
+    x_admin_token: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, str]:
     """Delete a card."""
     card = await get_card_with_board(card_id, db)
     assert_not_expired(card.column.board)
-    assert_writable(card.column.board, admin_token)
+    assert_writable(card.column.board, x_admin_token)
 
     await db.delete(card)
     return {"detail": "Card deleted"}

@@ -1,6 +1,6 @@
 from datetime import timedelta
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -46,9 +46,11 @@ async def get_board_or_404(board_id: str, db: AsyncSession) -> Board:
     return board
 
 
-async def get_board_as_admin(board_id: str, admin_token: str, db: AsyncSession) -> Board:
+async def get_board_as_admin(
+    board_id: str, admin_token: str | None, db: AsyncSession
+) -> Board:
     board = await get_board_or_404(board_id, db)
-    if board.admin_token != admin_token:
+    if not admin_token or board.admin_token != admin_token:
         raise HTTPException(status_code=403, detail="Not authorized")
     return board
 
@@ -97,8 +99,8 @@ async def create_board(request: Request, payload: BoardCreate, db: AsyncSession 
 async def get_board(
     request: Request,
     board_id: str,
-    password: str | None = Query(None),
-    admin_token: str | None = Query(None),
+    x_board_password: str | None = Header(None),
+    x_admin_token: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ):
     """Get full board with columns and cards."""
@@ -115,12 +117,11 @@ async def get_board(
     if board.expires_at < utcnow():
         raise HTTPException(status_code=410, detail="Board has expired")
 
-    # Admin bypasses password check
-    is_admin = admin_token and admin_token == board.admin_token
+    is_admin = x_admin_token and x_admin_token == board.admin_token
     if board.password_hash and not is_admin:
-        if not password:
+        if not x_board_password:
             raise HTTPException(status_code=401, detail="Password required")
-        if not verify_password(password, board.password_hash):
+        if not verify_password(x_board_password, board.password_hash):
             raise HTTPException(status_code=401, detail="Invalid password")
 
     columns_info = [ColumnInfo.model_validate(col) for col in board.columns]
@@ -141,11 +142,11 @@ async def get_board(
 async def update_board(
     board_id: str,
     payload: BoardUpdate,
-    admin_token: str = Query(...),
+    x_admin_token: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ):
     """Update board settings (admin only)."""
-    board = await get_board_as_admin(board_id, admin_token, db)
+    board = await get_board_as_admin(board_id, x_admin_token, db)
 
     if payload.title is not None:
         board.title = payload.title
@@ -162,10 +163,10 @@ async def update_board(
 @router.delete("/{board_id}")
 async def delete_board(
     board_id: str,
-    admin_token: str = Query(...),
+    x_admin_token: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ):
     """Delete board and all associated data (admin only)."""
-    board = await get_board_as_admin(board_id, admin_token, db)
+    board = await get_board_as_admin(board_id, x_admin_token, db)
     await db.delete(board)
     return {"detail": "Board deleted"}

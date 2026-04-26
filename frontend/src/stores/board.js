@@ -47,11 +47,11 @@ export const useBoardStore = defineStore('board', () => {
   async function fetchBoard(boardId, password = null) {
     loading.value = true
     try {
-      const params = {}
-      if (password) params.password = password
-      if (adminToken.value) params.admin_token = adminToken.value
+      const headers = {}
+      if (password) headers['X-Board-Password'] = password
+      if (adminToken.value) headers['X-Admin-Token'] = adminToken.value
 
-      const { data } = await apiCall(() => api.get(`/api/boards/${boardId}`, { params }))
+      const { data } = await apiCall(() => api.get(`/api/boards/${boardId}`, { headers }))
       board.value = data.board
       columns.value = data.columns
       cards.value = data.cards
@@ -61,20 +61,20 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  function adminParams() {
-    return adminToken.value ? { admin_token: adminToken.value } : {}
+  function adminHeaders() {
+    return adminToken.value ? { 'X-Admin-Token': adminToken.value } : {}
   }
 
   async function updateBoard(boardId, payload) {
     const { data } = await apiCall(() =>
-      api.patch(`/api/boards/${boardId}`, payload, { params: adminParams() })
+      api.patch(`/api/boards/${boardId}`, payload, { headers: adminHeaders() })
     )
     board.value = data
   }
 
   async function deleteBoard(boardId) {
     await apiCall(() =>
-      api.delete(`/api/boards/${boardId}`, { params: adminParams() })
+      api.delete(`/api/boards/${boardId}`, { headers: adminHeaders() })
     )
     resetState()
   }
@@ -83,7 +83,7 @@ export const useBoardStore = defineStore('board', () => {
     const { data } = await apiCall(() =>
       api.post(`/api/boards/${boardId}/cards`, {
         column_id: columnId, text, author_name: authorName, color,
-      }, { params: adminParams() })
+      }, { headers: adminHeaders() })
     )
     onCardAdded(data)
     return data
@@ -91,14 +91,14 @@ export const useBoardStore = defineStore('board', () => {
 
   async function updateCard(cardId, text) {
     const { data } = await apiCall(() =>
-      api.patch(`/api/cards/${cardId}`, { text }, { params: adminParams() })
+      api.patch(`/api/cards/${cardId}`, { text }, { headers: adminHeaders() })
     )
     onCardUpdated(data)
     return data
   }
 
   async function deleteCard(cardId) {
-    await apiCall(() => api.delete(`/api/cards/${cardId}`, { params: adminParams() }))
+    await apiCall(() => api.delete(`/api/cards/${cardId}`, { headers: adminHeaders() }))
     onCardDeleted(cardId)
   }
 
@@ -130,7 +130,7 @@ export const useBoardStore = defineStore('board', () => {
 
   async function moveCard(cardId, columnId) {
     const { data } = await apiCall(() =>
-      api.patch(`/api/cards/${cardId}/move`, { column_id: columnId }, { params: adminParams() })
+      api.patch(`/api/cards/${cardId}/move`, { column_id: columnId }, { headers: adminHeaders() })
     )
     onCardMoved(data.id, data.column_id)
     return data
