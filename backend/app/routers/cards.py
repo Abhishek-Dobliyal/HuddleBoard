@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -18,10 +18,16 @@ async def get_card_or_404(card_id: str, db: AsyncSession) -> Card:
     return card
 
 
+async def check_board_admin(board: Board, admin_token: str | None) -> bool:
+    """Return True if the request is from the board admin."""
+    return admin_token is not None and admin_token == board.admin_token
+
+
 @router.post("/api/boards/{board_id}/cards", response_model=CardInfo)
 async def create_card(
     board_id: str,
     payload: CardCreate,
+    admin_token: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
     """Add a card to a column on a board."""
@@ -38,7 +44,8 @@ async def create_card(
     if column.board.expires_at < utcnow():
         raise HTTPException(status_code=410, detail="Board has expired")
 
-    if column.board.is_readonly_default:
+    is_admin = await check_board_admin(column.board, admin_token)
+    if column.board.is_readonly_default and not is_admin:
         raise HTTPException(status_code=403, detail="Board is read-only")
 
     card = Card(
@@ -69,6 +76,7 @@ async def update_card(
 async def move_card(
     card_id: str,
     payload: CardMove,
+    admin_token: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
     """Move a card to a different column."""
@@ -94,7 +102,8 @@ async def move_card(
     if not source_column or source_column.board_id != target_column.board_id:
         raise HTTPException(status_code=400, detail="Cannot move card across boards")
 
-    if target_column.board.is_readonly_default:
+    is_admin = await check_board_admin(target_column.board, admin_token)
+    if target_column.board.is_readonly_default and not is_admin:
         raise HTTPException(status_code=403, detail="Board is read-only")
 
     card.column_id = payload.column_id

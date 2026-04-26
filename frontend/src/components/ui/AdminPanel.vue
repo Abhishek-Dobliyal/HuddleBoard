@@ -29,6 +29,15 @@ async function copyShareUrl() {
   }
 }
 
+async function copyBoardId() {
+  try {
+    await navigator.clipboard.writeText(props.boardId)
+    showToast('Board ID copied!', 'success')
+  } catch {
+    showToast('Failed to copy.', 'error')
+  }
+}
+
 async function copyAdminUrl() {
   try {
     const adminUrl = `${props.shareUrl}?admin=${boardStore.adminToken}`
@@ -143,9 +152,16 @@ async function handleDelete() {
         <div>
           <h4 class="text-sm font-medium text-gray-700 mb-2">Board Info</h4>
           <div class="bg-gray-50 rounded-lg p-3 space-y-1 text-sm">
-            <div class="flex justify-between">
+            <div class="flex justify-between items-center">
               <span class="text-gray-500">Board ID</span>
-              <span class="text-gray-700 font-mono text-xs">{{ boardId }}</span>
+              <button
+                @click="copyBoardId"
+                class="text-gray-400 hover:text-indigo-600 transition-colors cursor-pointer flex items-center gap-1 text-xs"
+                title="Copy Board ID"
+              >
+                <span class="text-gray-700 font-mono">{{ boardId.slice(0, 8) }}...</span>
+                <font-awesome-icon icon="copy" />
+              </button>
             </div>
             <div class="flex justify-between">
               <span class="text-gray-500">Template</span>

@@ -20,28 +20,35 @@ const { showToast } = useToast()
 
 const cardCount = computed(() => props.cards.length)
 
-// Writable computed for vuedraggable — it needs v-model
-const draggableCards = computed({
-  get: () => props.cards,
+// vuedraggable needs a writable list — we sync via onChange
+const localCards = computed({
+  get: () => [...props.cards],
   set: () => {
-    // Actual move is handled in onEnd
+    // handled by onChange
   },
 })
 
-async function onEnd(evt) {
-  // Only handle cross-column moves (same column reorder not supported by backend)
-  if (evt.from === evt.to) return
+async function onChange(evt) {
+  // Only act on the "added" side (card dropped INTO this column)
+  if (!evt.added) return
 
-  const cardId = evt.item.dataset.cardId
-  const targetColumnId = evt.to.dataset.columnId
-  if (!cardId || !targetColumnId) return
+  const card = evt.added.element
+  const targetColumnId = props.column.id
+
+  // Skip if card is already in this column
+  if (card.column_id === targetColumnId) return
+
+  const oldColumnId = card.column_id
+
+  // Update local state immediately so UI reflects the move
+  boardStore.onCardMoved(card.id, targetColumnId)
 
   try {
-    const updated = await boardStore.moveCard(cardId, targetColumnId)
+    const updated = await boardStore.moveCard(card.id, targetColumnId)
     wsStore.send('card:move', { card_id: updated.id, column_id: updated.column_id })
   } catch {
-    // Revert: move card back to original column in local state
-    boardStore.onCardMoved(cardId, evt.from.dataset.columnId)
+    // Revert on failure
+    boardStore.onCardMoved(card.id, oldColumnId)
     showToast('Failed to move card.', 'error')
   }
 }
@@ -76,24 +83,21 @@ const columnStyle = computed(() => {
 
     <!-- Cards List -->
     <draggable
-      v-model="draggableCards"
+      :list="localCards"
       group="cards"
       item-key="id"
       :disabled="readOnly"
-      :data-column-id="column.id"
       class="flex-1 overflow-y-auto px-3 pb-3 space-y-2 min-h-[40px]"
       ghost-class="drag-ghost"
       drag-class="drag-active"
       :animation="150"
-      @end="onEnd"
+      @change="onChange"
     >
       <template #item="{ element }">
-        <div :data-card-id="element.id">
-          <BoardCard
-            :card="element"
-            :read-only="readOnly"
-          />
-        </div>
+        <BoardCard
+          :card="element"
+          :read-only="readOnly"
+        />
       </template>
     </draggable>
 

@@ -81,10 +81,11 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   async function addCard(boardId, columnId, text, authorName, color) {
+    const params = adminToken.value ? { admin_token: adminToken.value } : {}
     const { data } = await apiCall(() =>
       axios.post(`/api/boards/${boardId}/cards`, {
         column_id: columnId, text, author_name: authorName, color,
-      })
+      }, { params })
     )
     onCardAdded(data)
     return data
@@ -128,7 +129,8 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   async function moveCard(cardId, columnId) {
-    const { data } = await apiCall(() => axios.patch(`/api/cards/${cardId}/move`, { column_id: columnId }))
+    const params = adminToken.value ? { admin_token: adminToken.value } : {}
+    const { data } = await apiCall(() => axios.patch(`/api/cards/${cardId}/move`, { column_id: columnId }, { params }))
     onCardMoved(data.id, data.column_id)
     return data
   }
