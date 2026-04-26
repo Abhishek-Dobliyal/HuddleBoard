@@ -107,6 +107,10 @@ async function handleDelete() {
               <span class="truncate">Copy admin link</span>
               <font-awesome-icon icon="copy" class="text-indigo-300 ml-auto" />
             </button>
+            <p class="text-xs text-amber-600 mt-1 px-1">
+              <font-awesome-icon icon="triangle-exclamation" class="mr-1" />
+              Admin link is confidential. Only share with trusted people.
+            </p>
           </div>
         </div>
 
