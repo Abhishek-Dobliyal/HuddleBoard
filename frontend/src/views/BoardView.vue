@@ -41,7 +41,7 @@ async function loadBoard(password = null) {
   try {
     await boardStore.fetchBoard(boardId, password)
     needsPassword.value = false
-    wsStore.connect(boardId, adminToken)
+    wsStore.connect(boardId, { adminToken, password })
   } catch (err) {
     if (err.response?.status === 401) {
       needsPassword.value = true
@@ -165,7 +165,6 @@ onUnmounted(() => {
           :cards="boardStore.cardsByColumn(column.id)"
           :board-id="boardId"
           :read-only="boardStore.isReadOnly"
-
         />
       </div>
     </main>

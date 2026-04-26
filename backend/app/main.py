@@ -5,11 +5,14 @@ from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import select
 
-from app.database import create_tables
+from app.database import async_session, create_tables
+from app.models import Board, utcnow
 from app.routers import boards, cards
+from app.routers.boards import verify_password
 from app.tasks import run_cleanup
 from app.ws.manager import manager
 
@@ -68,7 +71,31 @@ app.include_router(cards.router)
 
 
 @app.websocket("/ws/{board_id}")
-async def websocket_endpoint(websocket: WebSocket, board_id: str) -> None:
+async def websocket_endpoint(
+    websocket: WebSocket,
+    board_id: str,
+    admin: str | None = Query(None),
+    password: str | None = Query(None),
+) -> None:
+    async with async_session() as session:
+        result = await session.execute(select(Board).where(Board.id == board_id))
+        board = result.scalar_one_or_none()
+
+    if not board:
+        await websocket.close(code=4004, reason="Board not found")
+        return
+
+    if board.expires_at < utcnow():
+        await websocket.close(code=4010, reason="Board has expired")
+        return
+
+    if board.password_hash:
+        is_admin = admin is not None and admin == board.admin_token
+        if not is_admin:
+            if not password or not verify_password(password, board.password_hash):
+                await websocket.close(code=4001, reason="Password required")
+                return
+
     await manager.connect(websocket, board_id)
     try:
         while True:

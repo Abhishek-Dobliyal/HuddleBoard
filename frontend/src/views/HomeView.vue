@@ -80,7 +80,7 @@ async function handleCreate() {
       params: { id: data.board_id },
       query: { admin: data.admin_token },
     })
-  } catch (err) {
+  } catch {
     // error already set in store
   } finally {
     isCreating.value = false
@@ -123,7 +123,7 @@ const features = [
           <!-- Feature pills -->
           <div class="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div
-              v-for="(feature, idx) in features"
+              v-for="feature in features"
               :key="feature.title"
               class="flex items-start gap-3"
             >
@@ -215,7 +215,7 @@ const features = [
                 <label class="block text-sm font-medium text-gray-500 mb-2">Columns</label>
                 <div class="flex flex-wrap gap-2">
                   <span
-                    v-for="(col, idx) in selectedTemplate.columns"
+                    v-for="col in selectedTemplate.columns"
                     :key="col"
                     class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs"
                   >{{ col }}</span>

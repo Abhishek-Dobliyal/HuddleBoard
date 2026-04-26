@@ -8,22 +8,22 @@ export const api = axios.create({
 
 /**
  * Build the WebSocket URL for a given board.
- * - Local dev (VITE_API_URL empty): uses current host via Vite proxy
- * - Production (VITE_API_URL set): derives WS URL from the API URL
+ * Local dev (VITE_API_URL empty): uses current host via Vite proxy.
+ * Production (VITE_API_URL set): derives WS URL from the API URL.
  */
-export function buildWsUrl(boardId, adminToken = null) {
-  let url
-
+export function buildWsUrl(boardId, { adminToken = null, password = null } = {}) {
+  let base
   if (API_URL) {
-    // Production: convert https://api.example.com → wss://api.example.com/ws/{id}
-    const wsBase = API_URL.replace(/^http/, 'ws')
-    url = `${wsBase}/ws/${boardId}`
+    base = API_URL.replace(/^http/, 'ws')
   } else {
-    // Local dev: use current host (Vite proxy handles it)
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    url = `${protocol}://${window.location.host}/ws/${boardId}`
+    base = `${protocol}://${window.location.host}`
   }
 
-  if (adminToken) url += `?admin=${adminToken}`
-  return url
+  const params = new URLSearchParams()
+  if (adminToken) params.set('admin', adminToken)
+  if (password) params.set('password', password)
+
+  const qs = params.toString()
+  return `${base}/ws/${boardId}${qs ? '?' + qs : ''}`
 }

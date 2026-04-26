@@ -9,11 +9,13 @@ export const useWsStore = defineStore('ws', () => {
   const socket = ref(null)
   const connected = ref(false)
   const reconnectTimer = ref(null)
+  let connectOpts = {}
 
-  function connect(id, adminToken = null) {
+  function connect(boardId, opts = {}) {
+    connectOpts = { boardId, ...opts }
     disconnect()
 
-    const ws = new WebSocket(buildWsUrl(id, adminToken))
+    const ws = new WebSocket(buildWsUrl(boardId, opts))
     socket.value = ws
 
     ws.onopen = () => {
@@ -33,7 +35,7 @@ export const useWsStore = defineStore('ws', () => {
       connected.value = false
       const { showToast } = useToast()
       showToast('Connection lost. Reconnecting...', 'warning')
-      scheduleReconnect(id, adminToken)
+      scheduleReconnect()
     }
 
     ws.onerror = () => {
@@ -99,9 +101,12 @@ export const useWsStore = defineStore('ws', () => {
     connected.value = false
   }
 
-  function scheduleReconnect(id, adminToken) {
+  function scheduleReconnect() {
     clearReconnectTimer()
-    reconnectTimer.value = setTimeout(() => connect(id, adminToken), WS_RECONNECT_DELAY_MS)
+    reconnectTimer.value = setTimeout(
+      () => connect(connectOpts.boardId, connectOpts),
+      WS_RECONNECT_DELAY_MS,
+    )
   }
 
   function clearReconnectTimer() {
