@@ -3,7 +3,10 @@ import { ref } from 'vue'
 import { useBoardStore } from './board'
 import { useToast } from '../composables/useToast'
 import { buildWsUrl } from '../lib/api'
-import { WS_RECONNECT_BASE_MS, WS_RECONNECT_MAX_MS, WS_RECONNECT_MAX_RETRIES } from '../constants/board'
+import {
+  WS_RECONNECT_BASE_MS, WS_RECONNECT_MAX_MS, WS_RECONNECT_MAX_RETRIES,
+  WS_CLOSE_MIN, WS_CLOSE_MAX,
+} from '../constants/board'
 
 export const useWsStore = defineStore('ws', () => {
   const socket = ref(null)
@@ -16,7 +19,7 @@ export const useWsStore = defineStore('ws', () => {
     connectOpts = { boardId, ...opts }
     disconnect()
 
-    const ws = new WebSocket(buildWsUrl(boardId, opts))
+    const ws = new WebSocket(buildWsUrl(boardId))
     socket.value = ws
 
     ws.onopen = () => {
@@ -24,6 +27,17 @@ export const useWsStore = defineStore('ws', () => {
       const wasReconnect = retryCount > 0
       retryCount = 0
       clearReconnectTimer()
+
+      // Send auth credentials as first message (not in URL)
+      if (connectOpts.adminToken || connectOpts.password) {
+        ws.send(JSON.stringify({
+          type: 'auth',
+          data: {
+            adminToken: connectOpts.adminToken || null,
+            password: connectOpts.password || null,
+          },
+        }))
+      }
 
       if (wasReconnect) {
         const boardStore = useBoardStore()
@@ -42,7 +56,7 @@ export const useWsStore = defineStore('ws', () => {
 
     ws.onclose = (event) => {
       connected.value = false
-      if (event.code >= 4000 && event.code < 5000) {
+      if (event.code >= WS_CLOSE_MIN && event.code < WS_CLOSE_MAX) {
         return
       }
       scheduleReconnect()

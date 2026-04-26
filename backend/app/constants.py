@@ -1,0 +1,33 @@
+import os
+
+# --- Field length limits ---
+TITLE_MAX_LENGTH = 100
+DESCRIPTION_MAX_LENGTH = 500
+CARD_TEXT_MAX_LENGTH = 500
+COLUMN_NAME_MAX_LENGTH = 50
+AUTHOR_NAME_MAX_LENGTH = 30
+PASSWORD_MIN_LENGTH = 4
+PASSWORD_HASH_MAX_LENGTH = 128
+UUID_LENGTH = 36
+
+# --- Board defaults ---
+DEFAULT_TTL_HOURS = 24
+TTL_MIN_HOURS = 1
+TTL_MAX_HOURS = 72
+DEFAULT_TEMPLATE = "retrospective"
+DEFAULT_AUTHOR = "Anonymous"
+DEFAULT_CARD_COLOR = "yellow"
+MAX_CUSTOM_COLUMNS = 4
+VALID_TEMPLATES = ("retrospective", "4ls", "custom")
+VALID_CARD_COLORS = ("yellow", "pink", "blue", "green", "purple")
+CUSTOM_COLUMN_COLORS = ("green", "blue", "red", "purple")
+
+# --- WebSocket close codes ---
+WS_CLOSE_PASSWORD_REQUIRED = 4001
+WS_CLOSE_BOARD_NOT_FOUND = 4004
+WS_CLOSE_BOARD_EXPIRED = 4010
+WS_AUTH_TIMEOUT_SECONDS = 10
+
+# --- Database pool ---
+DB_POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "10"))
+DB_MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "20"))

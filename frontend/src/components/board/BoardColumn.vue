@@ -5,6 +5,7 @@ import { useBoardStore } from '../../stores/board'
 import { useWsStore } from '../../stores/ws'
 import { useToast } from '../../composables/useToast'
 import { getErrorMessage } from '../../lib/errors'
+import { DRAG_ANIMATION_MS } from '../../constants/board'
 import BoardCard from './BoardCard.vue'
 import AddCardForm from './AddCardForm.vue'
 
@@ -19,6 +20,7 @@ const boardStore = useBoardStore()
 const wsStore = useWsStore()
 const { showToast } = useToast()
 
+const dragAnimationMs = DRAG_ANIMATION_MS
 const cardCount = computed(() => props.cards.length)
 
 const localCards = computed({
@@ -79,7 +81,7 @@ const columnStyle = computed(() => {
       class="flex-1 overflow-y-auto px-3 pb-3 space-y-2 min-h-[40px]"
       ghost-class="drag-ghost"
       drag-class="drag-active"
-      :animation="150"
+      :animation="dragAnimationMs"
       @change="onChange"
     >
       <template #item="{ element }">

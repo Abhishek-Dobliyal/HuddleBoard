@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBoardStore } from '../stores/board'
 import { useTypewriter } from '../composables/useTypewriter'
-import { TTL_MIN, TTL_MAX, MAX_CUSTOM_COLUMNS, MIN_CUSTOM_COLUMNS, LIMITS } from '../constants/board'
+import { TTL_MIN, TTL_MAX, TTL_DEFAULT, MAX_CUSTOM_COLUMNS, MIN_CUSTOM_COLUMNS, LIMITS, DEFAULT_TEMPLATE } from '../constants/board'
 
 const router = useRouter()
 const boardStore = useBoardStore()
@@ -19,8 +19,8 @@ const { displayText } = useTypewriter([
 
 const title = ref('')
 const description = ref('')
-const template = ref('retrospective')
-const ttlHours = ref(24)
+const template = ref(DEFAULT_TEMPLATE)
+const ttlHours = ref(TTL_DEFAULT)
 const password = ref('')
 const isReadOnly = ref(false)
 const isCreating = ref(false)

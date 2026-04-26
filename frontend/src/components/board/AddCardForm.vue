@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useBoardStore } from '../../stores/board'
 import { useWsStore } from '../../stores/ws'
 import { useToast } from '../../composables/useToast'
-import { STICKY_COLORS, STICKY_PICKER_CLASSES, LIMITS, STORAGE_KEY_AUTHOR } from '../../constants/board'
+import { STICKY_COLORS, STICKY_PICKER_CLASSES, LIMITS, STORAGE_KEY_AUTHOR, DEFAULT_AUTHOR } from '../../constants/board'
 import { getErrorMessage } from '../../lib/errors'
 
 const props = defineProps({
@@ -36,7 +36,7 @@ async function handleSubmit() {
   if (!trimmed || isSubmitting.value) return
 
   isSubmitting.value = true
-  const author = authorName.value.trim() || 'Anonymous'
+  const author = authorName.value.trim() || DEFAULT_AUTHOR
 
   if (authorName.value.trim()) {
     localStorage.setItem(STORAGE_KEY_AUTHOR, authorName.value.trim())

@@ -1,10 +1,11 @@
 import { ref } from 'vue'
+import { TOAST_DURATION_MS } from '../constants/board'
 
 const toasts = ref([])
 let toastId = 0
 
 export function useToast() {
-  function showToast(message, type = 'info', duration = 3000) {
+  function showToast(message, type = 'info', duration = TOAST_DURATION_MS) {
     const id = ++toastId
     toasts.value.push({ id, message, type })
     setTimeout(() => {

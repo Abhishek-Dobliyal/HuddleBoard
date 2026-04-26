@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -5,13 +6,17 @@ from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
-from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
+from app.constants import (
+    WS_CLOSE_BOARD_NOT_FOUND, WS_CLOSE_BOARD_EXPIRED,
+    WS_CLOSE_PASSWORD_REQUIRED, WS_AUTH_TIMEOUT_SECONDS,
+)
 from app.database import async_session, create_tables
 from app.limiter import limiter
 from app.models import Board, utcnow
@@ -82,29 +87,56 @@ app.include_router(cards.router)
 async def websocket_endpoint(
     websocket: WebSocket,
     board_id: str,
-    admin: str | None = Query(None),
-    password: str | None = Query(None),
 ) -> None:
     async with async_session() as session:
         result = await session.execute(select(Board).where(Board.id == board_id))
         board = result.scalar_one_or_none()
 
     if not board:
-        await websocket.close(code=4004, reason="Board not found")
+        await websocket.close(code=WS_CLOSE_BOARD_NOT_FOUND, reason="Board not found")
         return
 
     if board.expires_at < utcnow():
-        await websocket.close(code=4010, reason="Board has expired")
+        await websocket.close(code=WS_CLOSE_BOARD_EXPIRED, reason="Board has expired")
         return
 
+    # Accept the connection, then authenticate via first message
+    await websocket.accept()
+
     if board.password_hash:
-        is_admin = admin is not None and admin == board.admin_token
+        try:
+            raw = await asyncio.wait_for(
+                websocket.receive_text(), timeout=WS_AUTH_TIMEOUT_SECONDS,
+            )
+            auth_msg = json.loads(raw)
+        except (asyncio.TimeoutError, json.JSONDecodeError, Exception):
+            await websocket.close(code=WS_CLOSE_PASSWORD_REQUIRED, reason="Auth timeout")
+            return
+
+        if auth_msg.get("type") != "auth":
+            await websocket.close(code=WS_CLOSE_PASSWORD_REQUIRED, reason="Expected auth message")
+            return
+
+        admin_token = auth_msg.get("data", {}).get("adminToken")
+        password = auth_msg.get("data", {}).get("password")
+
+        is_admin = admin_token is not None and admin_token == board.admin_token
         if not is_admin:
             if not password or not verify_password(password, board.password_hash):
-                await websocket.close(code=4001, reason="Password required")
+                await websocket.close(code=WS_CLOSE_PASSWORD_REQUIRED, reason="Password required")
                 return
 
-    await manager.connect(websocket, board_id)
+    # Auth passed — add to room
+    board_id_str = board_id
+    self_rooms = manager.rooms
+    self_rooms[board_id_str].add(websocket)
+    count = len(self_rooms[board_id_str])
+    await manager.broadcast(board_id_str, {
+        "type": "user:joined",
+        "data": {"count": count},
+    })
+    logger.info("WS connected to board %s (%d users)", board_id_str, count)
+
     try:
         while True:
             data = await websocket.receive_text()

@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.constants import CUSTOM_COLUMN_COLORS, MAX_CUSTOM_COLUMNS
 from app.database import get_db
 from app.limiter import limiter, RATE_BOARD_CREATE, RATE_BOARD_FETCH
 from app.models import Board, Column, utcnow
@@ -74,12 +75,11 @@ async def create_board(request: Request, payload: BoardCreate, db: AsyncSession 
     await db.flush()  # need board.id before creating columns
 
     if payload.template == "custom" and payload.custom_columns:
-        colors = ["green", "blue", "red", "purple"]
-        for idx, col_title in enumerate(payload.custom_columns[:4]):
+        for idx, col_title in enumerate(payload.custom_columns[:MAX_CUSTOM_COLUMNS]):
             db.add(Column(
                 board_id=board.id,
                 title=col_title.strip(),
-                color=colors[idx % len(colors)],
+                color=CUSTOM_COLUMN_COLORS[idx % len(CUSTOM_COLUMN_COLORS)],
                 position=idx,
             ))
     elif payload.template in TEMPLATES:

@@ -35,7 +35,10 @@ engine = create_async_engine(
     echo=False,
     connect_args={"check_same_thread": False} if is_sqlite else pg_connect_args,
     # Postgres connection pool settings
-    **({} if is_sqlite else {"pool_size": 10, "max_overflow": 20}),
+    **({} if is_sqlite else {
+        "pool_size": int(os.getenv("DB_POOL_SIZE", "10")),
+        "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "20")),
+    }),
 )
 
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
