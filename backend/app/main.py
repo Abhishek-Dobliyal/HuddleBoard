@@ -1,17 +1,17 @@
-import os
 import json
 import logging
+import os
 from contextlib import asynccontextmanager
-from dotenv import load_dotenv
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from dotenv import load_dotenv
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.database import create_tables
 from app.routers import boards, cards
-from app.ws.manager import manager
 from app.tasks import run_cleanup
+from app.ws.manager import manager
 
 load_dotenv()
 
@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 scheduler = BackgroundScheduler()
-cleanup_interval = int(os.getenv("TTL_CLEANUP_INTERVAL_MINUTES", "30"))
+cleanup_interval = int(os.getenv("TTL_CLEANUP_INTERVAL_MINUTES", "15"))
 
 WS_EVENT_MAP: dict[str, str] = {
     "card:add": "card:added",
@@ -36,7 +36,9 @@ async def lifespan(app: FastAPI):
     await create_tables()
     logger.info("Database tables created")
 
-    scheduler.add_job(run_cleanup, "interval", minutes=cleanup_interval, id="ttl_cleanup")
+    scheduler.add_job(
+        run_cleanup, "interval", minutes=cleanup_interval, id="ttl_cleanup"
+    )
     scheduler.start()
     logger.info("TTL cleanup scheduler started (every %d min)", cleanup_interval)
 
@@ -85,10 +87,14 @@ async def websocket_endpoint(websocket: WebSocket, board_id: str) -> None:
 
             outgoing_type = WS_EVENT_MAP.get(msg_type)
             if outgoing_type:
-                await manager.broadcast(board_id, {
-                    "type": outgoing_type,
-                    "data": msg_data,
-                }, exclude=websocket)
+                await manager.broadcast(
+                    board_id,
+                    {
+                        "type": outgoing_type,
+                        "data": msg_data,
+                    },
+                    exclude=websocket,
+                )
 
     except WebSocketDisconnect:
         await manager.disconnect(websocket, board_id)

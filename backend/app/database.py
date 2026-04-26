@@ -5,13 +5,24 @@ from sqlalchemy.orm import DeclarativeBase
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./huddleboard.db")
+def _build_db_url() -> str:
+    """Convert DATABASE_URL env var to an async SQLAlchemy-compatible URL."""
+    url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./huddleboard.db")
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
+
+DATABASE_URL = _build_db_url()
+is_sqlite = DATABASE_URL.startswith("sqlite")
 
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
-    # SQLite-specific: allow same connection across threads for async
-    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
+    connect_args={"check_same_thread": False} if is_sqlite else {},
+    # Postgres connection pool settings
+    **({} if is_sqlite else {"pool_size": 5, "max_overflow": 10}),
 )
 
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -32,7 +43,7 @@ async def get_db():
             raise
 
 
-async def create_tables():
-    """Create all tables on startup."""
+async def create_tables() -> None:
+    """Create all tables on startup (dev/fallback only — use Alembic in prod)."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

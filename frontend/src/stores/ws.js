@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useBoardStore } from './board'
 import { useToast } from '../composables/useToast'
+import { buildWsUrl } from '../lib/api'
 import { WS_RECONNECT_DELAY_MS } from '../constants/board'
 
 export const useWsStore = defineStore('ws', () => {
@@ -10,13 +11,9 @@ export const useWsStore = defineStore('ws', () => {
   const reconnectTimer = ref(null)
 
   function connect(id, adminToken = null) {
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    let url = `${protocol}://${window.location.host}/ws/${id}`
-    if (adminToken) url += `?admin=${adminToken}`
-
     disconnect()
 
-    const ws = new WebSocket(url)
+    const ws = new WebSocket(buildWsUrl(id, adminToken))
     socket.value = ws
 
     ws.onopen = () => {
