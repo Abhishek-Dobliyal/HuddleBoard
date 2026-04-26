@@ -52,8 +52,25 @@ class ConnectionManager:
             except Exception:
                 dead_connections.add(ws)
 
-        for ws in dead_connections:
-            self.rooms[board_id].discard(ws)
+        if dead_connections:
+            for ws in dead_connections:
+                self.rooms[board_id].discard(ws)
+                logger.warning("Removed dead WS from board %s", board_id)
+
+            # Re-broadcast corrected user count to remaining live sockets
+            if board_id in self.rooms and self.rooms[board_id]:
+                corrected_count = len(self.rooms[board_id])
+                corrected_data = json.dumps({
+                    "type": "user:left",
+                    "data": {"count": corrected_count},
+                }, default=str)
+                for ws in list(self.rooms[board_id]):
+                    try:
+                        await ws.send_text(corrected_data)
+                    except Exception:
+                        self.rooms[board_id].discard(ws)
+            elif board_id in self.rooms:
+                del self.rooms[board_id]
 
 
 manager = ConnectionManager()

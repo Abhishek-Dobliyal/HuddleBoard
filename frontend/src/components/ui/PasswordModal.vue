@@ -1,6 +1,10 @@
 <script setup>
 import { ref } from 'vue'
 
+const props = defineProps({
+  loading: { type: Boolean, default: false },
+})
+
 const emit = defineEmits(['submit'])
 
 const password = ref('')
@@ -13,6 +17,7 @@ function setError(msg) {
 }
 
 function handleSubmit() {
+  if (props.loading) return
   if (!password.value.trim()) {
     setError('Password is required')
     return
@@ -41,7 +46,8 @@ defineExpose({ setError })
           type="password"
           placeholder="Board password"
           autofocus
-          class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 transition-colors mb-3"
+          :disabled="loading"
+          class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 transition-colors mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
         />
 
         <transition
@@ -53,9 +59,11 @@ defineExpose({ setError })
 
         <button
           type="submit"
-          class="w-full py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium cursor-pointer active:scale-[0.98]"
+          :disabled="loading"
+          class="w-full py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium cursor-pointer active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          Enter Board
+          <span v-if="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          {{ loading ? 'Verifying...' : 'Enter Board' }}
         </button>
       </form>
 

@@ -21,8 +21,15 @@ export const useWsStore = defineStore('ws', () => {
 
     ws.onopen = () => {
       connected.value = true
+      const wasReconnect = retryCount > 0
       retryCount = 0
       clearReconnectTimer()
+
+      if (wasReconnect) {
+        const boardStore = useBoardStore()
+        const password = connectOpts.password || null
+        boardStore.fetchBoard(connectOpts.boardId, password).catch(() => {})
+      }
     }
 
     ws.onmessage = (event) => {

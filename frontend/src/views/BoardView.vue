@@ -72,7 +72,7 @@ onUnmounted(() => {
 
 <template>
   <div>
-  <PasswordModal v-if="needsPassword" ref="passwordModalRef" @submit="loadBoard" />
+  <PasswordModal v-if="needsPassword" ref="passwordModalRef" :loading="boardStore.loading" @submit="loadBoard" />
 
   <div v-else-if="boardStore.loading" class="min-h-screen flex items-center justify-center">
     <div class="text-center">
