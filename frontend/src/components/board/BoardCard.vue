@@ -4,6 +4,7 @@ import { useBoardStore } from '../../stores/board'
 import { useWsStore } from '../../stores/ws'
 import { useToast } from '../../composables/useToast'
 import { STICKY_COLOR_CLASSES, LIMITS } from '../../constants/board'
+import { getErrorMessage } from '../../lib/errors'
 
 const props = defineProps({
   card: { type: Object, required: true },
@@ -41,8 +42,8 @@ async function saveEdit() {
     const updated = await boardStore.updateCard(props.card.id, trimmed)
     wsStore.send('card:update', { card_id: updated.id, text: updated.text })
     isEditing.value = false
-  } catch {
-    showToast('Failed to update card. Please try again.', 'error')
+  } catch (err) {
+    showToast(getErrorMessage(err, 'Failed to update card'), 'error')
   }
 }
 
@@ -56,8 +57,8 @@ async function handleVote() {
   try {
     const updated = await boardStore.voteCard(props.card.id)
     wsStore.send('card:vote', { card_id: updated.id, votes: updated.votes })
-  } catch {
-    showToast('Failed to register vote.', 'error')
+  } catch (err) {
+    showToast(getErrorMessage(err, 'Failed to register vote'), 'error')
   } finally {
     isVoting.value = false
   }
@@ -70,8 +71,8 @@ async function handleDelete() {
     await boardStore.deleteCard(props.card.id)
     wsStore.send('card:delete', { card_id: props.card.id })
     showConfirmDelete.value = false
-  } catch {
-    showToast('Failed to delete card.', 'error')
+  } catch (err) {
+    showToast(getErrorMessage(err, 'Failed to delete card'), 'error')
     showConfirmDelete.value = false
   } finally {
     isDeleting.value = false

@@ -5,6 +5,7 @@ import { useBoardStore } from '../../stores/board'
 import { useWsStore } from '../../stores/ws'
 import { useToast } from '../../composables/useToast'
 import { useClipboard } from '../../composables/useClipboard'
+import { getErrorMessage } from '../../lib/errors'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -44,8 +45,8 @@ async function toggleReadOnly() {
       boardStore.board.is_readonly_default ? 'Board is now read-only' : 'Board is now editable',
       'info',
     )
-  } catch {
-    showToast('Failed to update board settings.', 'error')
+  } catch (err) {
+    showToast(getErrorMessage(err, 'Failed to update board settings'), 'error')
   }
 }
 
@@ -54,8 +55,8 @@ async function handleDelete() {
     await boardStore.deleteBoard(props.boardId)
     showToast('Board deleted', 'info')
     router.push('/')
-  } catch {
-    showToast('Failed to delete board. Please try again.', 'error')
+  } catch (err) {
+    showToast(getErrorMessage(err, 'Failed to delete board'), 'error')
     confirmDelete.value = false
   }
 }

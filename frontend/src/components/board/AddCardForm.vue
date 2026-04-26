@@ -4,6 +4,7 @@ import { useBoardStore } from '../../stores/board'
 import { useWsStore } from '../../stores/ws'
 import { useToast } from '../../composables/useToast'
 import { STICKY_COLORS, STICKY_PICKER_CLASSES, LIMITS, STORAGE_KEY_AUTHOR } from '../../constants/board'
+import { getErrorMessage } from '../../lib/errors'
 
 const props = defineProps({
   boardId: { type: String, required: true },
@@ -49,8 +50,8 @@ async function handleSubmit() {
     wsStore.send('card:add', card)
     text.value = ''
     selectedColor.value = STICKY_COLORS[Math.floor(Math.random() * STICKY_COLORS.length)]
-  } catch {
-    showToast('Failed to add card. Please try again.', 'error')
+  } catch (err) {
+    showToast(getErrorMessage(err, 'Failed to add card'), 'error')
   } finally {
     isSubmitting.value = false
   }

@@ -4,6 +4,7 @@ import draggable from 'vuedraggable'
 import { useBoardStore } from '../../stores/board'
 import { useWsStore } from '../../stores/ws'
 import { useToast } from '../../composables/useToast'
+import { getErrorMessage } from '../../lib/errors'
 import BoardCard from './BoardCard.vue'
 import AddCardForm from './AddCardForm.vue'
 
@@ -43,10 +44,9 @@ async function onChange(evt) {
   try {
     const updated = await boardStore.moveCard(card.id, targetColumnId)
     wsStore.send('card:move', { card_id: updated.id, column_id: updated.column_id })
-  } catch {
-    // Revert on failure
+  } catch (err) {
     boardStore.onCardMoved(card.id, oldColumnId)
-    showToast('Failed to move card.', 'error')
+    showToast(getErrorMessage(err, 'Failed to move card'), 'error')
   }
 }
 
