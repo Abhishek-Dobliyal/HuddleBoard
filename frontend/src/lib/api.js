@@ -6,12 +6,7 @@ export const api = axios.create({
   baseURL: API_URL,
 })
 
-/**
- * Build the WebSocket URL for a given board.
- * Local dev (VITE_API_URL empty): uses current host via Vite proxy.
- * Production (VITE_API_URL set): derives WS URL from the API URL.
- * Credentials are sent via the first message after connect, not in the URL.
- */
+/** Build WS URL — credentials are sent via first message, not the URL. */
 export function buildWsUrl(boardId) {
   let base
   if (API_URL) {
