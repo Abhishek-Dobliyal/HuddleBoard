@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBoardStore } from '../stores/board'
 import { useWsStore } from '../stores/ws'
@@ -18,7 +18,7 @@ const { showToast } = useToast()
 const boardId = route.params.id
 const adminToken = route.query.admin || null
 const needsPassword = ref(false)
-const passwordError = ref('')
+const passwordModalRef = ref(null)
 const showAdmin = ref(false)
 const loadError = ref(null)
 
@@ -50,7 +50,9 @@ async function loadBoard(password = null) {
   } catch (err) {
     if (err.response?.status === 401) {
       needsPassword.value = true
-      passwordError.value = password ? 'Incorrect password. Please try again.' : ''
+      if (password) {
+        nextTick(() => passwordModalRef.value?.setError('Incorrect password. Please try again.'))
+      }
     } else if (err.response?.status === 404 || err.response?.status === 410) {
       router.push({ name: 'not-found' })
     } else {
@@ -69,10 +71,10 @@ onUnmounted(() => {
 
 <template>
   <div>
-  <PasswordModal v-if="needsPassword" :error="passwordError" @submit="loadBoard" />
+  <PasswordModal v-if="needsPassword" ref="passwordModalRef" @submit="loadBoard" />
 
   <div v-else-if="boardStore.loading" class="min-h-screen flex items-center justify-center">
-    <div class="text-center animate__animated animate__fadeIn">
+    <div class="text-center">
       <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto"></div>
       <p class="mt-4 text-gray-500">Loading board...</p>
     </div>
@@ -93,7 +95,7 @@ onUnmounted(() => {
 
   <div v-else-if="isExpired" class="min-h-screen flex items-center justify-center">
     <div class="text-center p-8 animate__animated animate__fadeIn">
-      <div class="text-6xl mb-4 animate__animated animate__pulse animate__infinite animate__slower">
+      <div class="text-6xl mb-4">
         <font-awesome-icon icon="clock" class="text-amber-500" />
       </div>
       <h2 class="text-2xl font-bold text-gray-800">Board Expired</h2>
@@ -104,8 +106,8 @@ onUnmounted(() => {
     </div>
   </div>
 
-  <div v-else-if="boardStore.board" class="min-h-screen flex flex-col">
-    <header class="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-30 animate__animated animate__fadeInDown animate__faster">
+  <div v-else-if="boardStore.board" class="h-screen flex flex-col overflow-hidden">
+    <header class="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-30">
       <div class="flex items-center justify-between max-w-screen-2xl mx-auto">
         <div class="flex items-center gap-3 min-w-0">
           <router-link to="/" class="text-xl font-bold text-gray-900 shrink-0 cursor-pointer hover:opacity-75 transition-opacity">
@@ -127,7 +129,7 @@ onUnmounted(() => {
           </span>
 
           <span
-            :class="['w-2 h-2 rounded-full transition-colors', wsStore.connected ? 'bg-green-400' : 'bg-red-400 animate__animated animate__flash animate__infinite animate__slower']"
+            :class="['w-2 h-2 rounded-full transition-colors', wsStore.connected ? 'bg-green-400' : 'bg-red-400']"
             :title="wsStore.connected ? 'Connected' : 'Disconnected'"
           ></span>
 
@@ -159,8 +161,8 @@ onUnmounted(() => {
       </p>
     </header>
 
-    <main class="flex-1 overflow-x-auto p-4">
-      <div class="flex gap-4 min-h-[calc(100vh-120px)] max-w-screen-2xl mx-auto">
+    <main class="flex-1 overflow-x-auto overflow-y-hidden p-4 min-h-0">
+      <div class="flex gap-4 h-full max-w-screen-2xl mx-auto">
         <BoardColumn
           v-for="(column, idx) in boardStore.columnsSorted"
           :key="column.id"
@@ -168,8 +170,7 @@ onUnmounted(() => {
           :cards="boardStore.cardsByColumn(column.id)"
           :board-id="boardId"
           :read-only="boardStore.isReadOnly"
-          class="animate__animated animate__fadeInUp"
-          :style="{ animationDelay: `${idx * 100}ms` }"
+
         />
       </div>
     </main>

@@ -7,6 +7,43 @@
     @apply bg-gray-50 text-gray-800 antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
+
+  input:not([type="checkbox"]):not([type="range"]),
+  textarea {
+    @apply border-gray-200 focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400;
+    outline: none;
+  }
+}
+
+/* Thin minimal scrollbar */
+* {
+  scrollbar-width: none;
+}
+
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.2) transparent;
+}
+
+.overflow-y-auto:hover {
+  scrollbar-color: rgba(99, 102, 241, 0.35) transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.2);
+  border-radius: 9999px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.4);
 }
 
 /* Custom utility classes */

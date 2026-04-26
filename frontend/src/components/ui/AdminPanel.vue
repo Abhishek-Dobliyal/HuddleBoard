@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBoardStore } from '../../stores/board'
+import { useWsStore } from '../../stores/ws'
 import { useToast } from '../../composables/useToast'
 
 const props = defineProps({
@@ -14,6 +15,7 @@ const emit = defineEmits(['close'])
 
 const router = useRouter()
 const boardStore = useBoardStore()
+const wsStore = useWsStore()
 const { showToast } = useToast()
 
 const confirmDelete = ref(false)
@@ -42,6 +44,7 @@ async function toggleReadOnly() {
     await boardStore.updateBoard(props.boardId, {
       is_readonly_default: !boardStore.board.is_readonly_default,
     })
+    wsStore.send('board:update', { is_readonly_default: boardStore.board.is_readonly_default })
     showToast(
       boardStore.board.is_readonly_default ? 'Board is now read-only' : 'Board is now editable',
       'info',

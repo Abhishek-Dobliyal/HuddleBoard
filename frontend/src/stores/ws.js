@@ -53,6 +53,15 @@ export const useWsStore = defineStore('ws', () => {
         boardStore.columns = msg.data.columns
         boardStore.cards = msg.data.cards
         break
+      case 'board:updated':
+        if (msg.data.is_readonly_default !== undefined) {
+          boardStore.board.is_readonly_default = msg.data.is_readonly_default
+          showToast(
+            msg.data.is_readonly_default ? 'Board is now read-only' : 'Board is now editable',
+            'info',
+          )
+        }
+        break
       case 'card:added':
         boardStore.onCardAdded(msg.data)
         showToast(`${msg.data.author_name || 'Someone'} added a card`, 'info')

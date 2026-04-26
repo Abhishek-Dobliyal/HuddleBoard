@@ -94,7 +94,7 @@ async function handleDelete() {
         v-model="editText"
         rows="3"
         maxlength="500"
-        class="w-full px-2 py-1 border border-gray-300 rounded text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+        class="w-full px-2 py-1 border border-gray-200 rounded text-sm resize-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 bg-white"
         @keydown.enter.ctrl="saveEdit"
         @keydown.escape="cancelEdit"
       ></textarea>
@@ -121,7 +121,7 @@ async function handleDelete() {
           :disabled="isVoting"
           class="flex items-center gap-1 text-xs text-gray-500 hover:text-indigo-600 transition-colors cursor-pointer active:scale-110"
         >
-          <font-awesome-icon icon="thumbs-up" :class="{ 'animate__animated animate__bounceIn': card.votes > 0 }" />
+          <font-awesome-icon icon="thumbs-up" />
           <span :class="[card.votes > 0 ? 'font-semibold text-indigo-600' : '']">{{ card.votes }}</span>
         </button>
 

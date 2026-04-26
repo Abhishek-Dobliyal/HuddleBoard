@@ -38,6 +38,9 @@ async def create_card(
     if column.board.expires_at < utcnow():
         raise HTTPException(status_code=410, detail="Board has expired")
 
+    if column.board.is_readonly_default:
+        raise HTTPException(status_code=403, detail="Board is read-only")
+
     card = Card(
         column_id=payload.column_id,
         text=payload.text,

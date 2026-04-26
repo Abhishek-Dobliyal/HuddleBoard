@@ -81,7 +81,7 @@ async function handleSubmit() {
           rows="3"
           maxlength="500"
           placeholder="Type your idea..."
-          class="w-full px-2 py-1.5 border border-gray-200 rounded text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          class="w-full px-2 py-1.5 border border-gray-200 rounded text-sm resize-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
           @keydown.enter.ctrl="handleSubmit"
           @blur="collapse"
         ></textarea>
@@ -91,7 +91,7 @@ async function handleSubmit() {
           type="text"
           placeholder="Your name (optional)"
           maxlength="30"
-          class="w-full mt-2 px-2 py-1.5 border border-gray-200 rounded text-xs text-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          class="w-full mt-2 px-2 py-1.5 border border-gray-200 rounded text-xs text-gray-600 focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
         />
 
         <div class="flex items-center gap-2 mt-2">

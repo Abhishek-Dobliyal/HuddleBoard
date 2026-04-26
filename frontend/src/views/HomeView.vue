@@ -103,7 +103,7 @@ const features = [
 
       <!-- LEFT HALF: Hero / Marketing -->
       <div class="lg:w-1/2 flex flex-col justify-center px-8 md:px-16 py-12 lg:py-0 lg:sticky lg:top-0 lg:h-screen">
-        <div class="max-w-lg mx-auto lg:mx-0 animate__animated animate__fadeInLeft">
+        <div class="max-w-lg mx-auto lg:mx-0">
           <!-- Logo -->
           <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight leading-tight">
             Huddle<span class="text-indigo-600">Board</span>
@@ -127,8 +127,7 @@ const features = [
             <div
               v-for="(feature, idx) in features"
               :key="feature.title"
-              class="flex items-start gap-3 animate__animated animate__fadeInUp"
-              :style="{ animationDelay: `${300 + idx * 150}ms` }"
+              class="flex items-start gap-3"
             >
               <div class="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0 mt-0.5">
                 <font-awesome-icon :icon="feature.icon" class="text-indigo-600 text-sm" />
@@ -141,7 +140,7 @@ const features = [
           </div>
 
           <!-- Social proof / stat -->
-          <div class="mt-12 flex items-center gap-4 text-sm text-gray-400 animate__animated animate__fadeIn animate__delay-1s">
+          <div class="mt-12 flex items-center gap-4 text-sm text-gray-400">
             <div class="flex -space-x-2">
               <div class="w-8 h-8 rounded-full bg-indigo-200 border-2 border-white flex items-center justify-center text-xs font-bold text-indigo-700">A</div>
               <div class="w-8 h-8 rounded-full bg-emerald-200 border-2 border-white flex items-center justify-center text-xs font-bold text-emerald-700">K</div>
@@ -154,7 +153,7 @@ const features = [
 
       <!-- RIGHT HALF: Create Board Form -->
       <div class="lg:w-1/2 flex items-center justify-center px-4 md:px-8 py-12 lg:py-0 lg:min-h-screen">
-        <div class="w-full max-w-lg animate__animated animate__fadeInRight">
+        <div class="w-full max-w-lg">
           <form @submit.prevent="handleCreate" class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
             <h2 class="text-xl font-semibold text-gray-800 mb-6">
               <font-awesome-icon icon="plus" class="text-indigo-500 mr-2" />
@@ -170,7 +169,7 @@ const features = [
                 type="text"
                 placeholder="e.g. Sprint 42 Retrospective"
                 maxlength="100"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 transition-colors"
               />
             </div>
 
@@ -183,7 +182,7 @@ const features = [
                 rows="2"
                 placeholder="What's this board about?"
                 maxlength="500"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors resize-none"
+                class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 transition-colors resize-none"
               ></textarea>
             </div>
 
@@ -220,8 +219,7 @@ const features = [
                   <span
                     v-for="(col, idx) in selectedTemplate.columns"
                     :key="col"
-                    class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs animate__animated animate__fadeInUp animate__faster"
-                    :style="{ animationDelay: `${idx * 80}ms` }"
+                    class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs"
                   >{{ col }}</span>
                 </div>
               </div>
@@ -235,13 +233,13 @@ const features = [
               <div v-if="template === 'custom'" class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Custom columns <span class="text-gray-400 text-xs">(up to 4)</span></label>
                 <div class="space-y-2">
-                  <div v-for="(col, idx) in customColumns" :key="idx" class="flex gap-2 animate__animated animate__fadeInLeft animate__faster" :style="{ animationDelay: `${idx * 60}ms` }">
+                  <div v-for="(col, idx) in customColumns" :key="idx" class="flex gap-2">
                     <input
                       v-model="customColumns[idx]"
                       type="text"
                       :placeholder="`Column ${idx + 1}`"
                       maxlength="50"
-                      class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                      class="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 text-sm"
                     />
                     <button
                       v-if="customColumns.length > 1"
@@ -314,7 +312,7 @@ const features = [
                     v-model="password"
                     type="password"
                     placeholder="Leave empty for open access"
-                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm"
+                    class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 transition-colors text-sm"
                   />
                 </div>
 
