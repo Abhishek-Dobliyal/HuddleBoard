@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.limiter import limiter, RATE_CARD_VOTE
 from app.models import Card, Column, utcnow
+from app.routers.boards import verify_password
 from app.schemas import CardCreate, CardUpdate, CardMove, CardInfo
 
 router = APIRouter(tags=["cards"])
@@ -38,11 +39,22 @@ def assert_writable(board, admin_token: str | None) -> None:
         raise HTTPException(status_code=403, detail="Board is read-only")
 
 
+def assert_board_access(board, admin_token: str | None, password: str | None) -> None:
+    """Verify the caller has access to a password-protected board."""
+    if not board.password_hash:
+        return
+    if is_board_admin(board, admin_token):
+        return
+    if not password or not verify_password(password, board.password_hash):
+        raise HTTPException(status_code=401, detail="Password required")
+
+
 @router.post("/api/boards/{board_id}/cards", response_model=CardInfo)
 async def create_card(
     board_id: str,
     payload: CardCreate,
     x_admin_token: str | None = Header(None),
+    x_board_password: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ) -> CardInfo:
     """Add a card to a column on a board."""
@@ -56,6 +68,7 @@ async def create_card(
         raise HTTPException(status_code=404, detail="Column not found on this board")
 
     assert_not_expired(column.board)
+    assert_board_access(column.board, x_admin_token, x_board_password)
     assert_writable(column.board, x_admin_token)
 
     card = Card(
@@ -74,11 +87,13 @@ async def update_card(
     card_id: str,
     payload: CardUpdate,
     x_admin_token: str | None = Header(None),
+    x_board_password: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ) -> CardInfo:
     """Update card text."""
     card = await get_card_with_board(card_id, db)
     assert_not_expired(card.column.board)
+    assert_board_access(card.column.board, x_admin_token, x_board_password)
     assert_writable(card.column.board, x_admin_token)
 
     card.text = payload.text
@@ -90,6 +105,7 @@ async def move_card(
     card_id: str,
     payload: CardMove,
     x_admin_token: str | None = Header(None),
+    x_board_password: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ) -> CardInfo:
     """Move a card to a different column."""
@@ -109,6 +125,7 @@ async def move_card(
         raise HTTPException(status_code=400, detail="Cannot move card across boards")
 
     assert_not_expired(target_column.board)
+    assert_board_access(target_column.board, x_admin_token, x_board_password)
     assert_writable(target_column.board, x_admin_token)
 
     card.column_id = payload.column_id
@@ -119,11 +136,13 @@ async def move_card(
 async def delete_card(
     card_id: str,
     x_admin_token: str | None = Header(None),
+    x_board_password: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, str]:
     """Delete a card."""
     card = await get_card_with_board(card_id, db)
     assert_not_expired(card.column.board)
+    assert_board_access(card.column.board, x_admin_token, x_board_password)
     assert_writable(card.column.board, x_admin_token)
 
     await db.delete(card)
@@ -135,11 +154,13 @@ async def delete_card(
 async def vote_card(
     request: Request,
     card_id: str,
+    x_board_password: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ) -> CardInfo:
     """Increment vote count on a card (atomic)."""
     card = await get_card_with_board(card_id, db)
     assert_not_expired(card.column.board)
+    assert_board_access(card.column.board, None, x_board_password)
 
     await db.execute(
         update(Card).where(Card.id == card_id).values(votes=Card.votes + 1)

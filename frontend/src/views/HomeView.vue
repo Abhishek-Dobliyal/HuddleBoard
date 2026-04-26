@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBoardStore } from '../stores/board'
 import { useTypewriter } from '../composables/useTypewriter'
+import { TTL_MIN, TTL_MAX, MAX_CUSTOM_COLUMNS, MIN_CUSTOM_COLUMNS, LIMITS } from '../constants/board'
 
 const router = useRouter()
 const boardStore = useBoardStore()
@@ -36,13 +37,13 @@ const customColumns = ref(['', '', ''])
 const selectedTemplate = computed(() => templates.find((t) => t.id === template.value))
 
 function addCustomColumn() {
-  if (customColumns.value.length < 4) {
+  if (customColumns.value.length < MAX_CUSTOM_COLUMNS) {
     customColumns.value.push('')
   }
 }
 
 function removeCustomColumn(idx) {
-  if (customColumns.value.length > 1) {
+  if (customColumns.value.length > MIN_CUSTOM_COLUMNS) {
     customColumns.value.splice(idx, 1)
   }
 }
@@ -158,7 +159,7 @@ const features = [
                 v-model="title"
                 type="text"
                 placeholder="e.g. Sprint 42 Retrospective"
-                maxlength="100"
+                :maxlength="LIMITS.TITLE"
                 class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 transition-colors"
               />
             </div>
@@ -170,7 +171,7 @@ const features = [
                 v-model="description"
                 rows="2"
                 placeholder="What's this board about?"
-                maxlength="500"
+                :maxlength="LIMITS.DESCRIPTION"
                 class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 transition-colors resize-none"
               ></textarea>
             </div>
@@ -224,11 +225,11 @@ const features = [
                       v-model="customColumns[idx]"
                       type="text"
                       :placeholder="`Column ${idx + 1}`"
-                      maxlength="50"
+                      :maxlength="LIMITS.COLUMN_NAME"
                       class="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 text-sm"
                     />
                     <button
-                      v-if="customColumns.length > 1"
+                      v-if="customColumns.length > MIN_CUSTOM_COLUMNS"
                       type="button"
                       @click="removeCustomColumn(idx)"
                       class="px-3 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
@@ -238,7 +239,7 @@ const features = [
                   </div>
                 </div>
                 <button
-                  v-if="customColumns.length < 4"
+                  v-if="customColumns.length < MAX_CUSTOM_COLUMNS"
                   type="button"
                   @click="addCustomColumn"
                   class="mt-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium cursor-pointer"
@@ -255,8 +256,8 @@ const features = [
               <input
                 v-model.number="ttlHours"
                 type="range"
-                min="1"
-                max="72"
+                :min="TTL_MIN"
+                :max="TTL_MAX"
                 step="1"
                 class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
               />

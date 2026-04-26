@@ -31,6 +31,7 @@ export const STICKY_PICKER_CLASSES = {
 }
 
 export const STORAGE_KEY_AUTHOR = 'hb_author'
+export const STORAGE_KEY_ADMIN_PREFIX = 'hb_admin_'
 
 export const WS_RECONNECT_BASE_MS = 1000
 export const WS_RECONNECT_MAX_MS = 30000

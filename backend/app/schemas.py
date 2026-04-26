@@ -18,7 +18,7 @@ class BoardCreate(BaseModel):
     description: str = Field("", max_length=500)
     template: str = Field("retrospective", pattern=r"^(retrospective|4ls|custom)$")
     ttl_hours: int = Field(24, ge=1, le=72)
-    password: str | None = None
+    password: str | None = Field(None, min_length=4)
     is_readonly_default: bool = False
     custom_columns: list[str] | None = None
 
@@ -27,8 +27,12 @@ class BoardCreate(BaseModel):
         if self.template == "custom":
             if not self.custom_columns:
                 raise ValueError("custom_columns required when template is 'custom'")
+            if len(self.custom_columns) > 4:
+                raise ValueError("Maximum 4 custom columns allowed")
             if any(not col.strip() for col in self.custom_columns):
                 raise ValueError("Column names cannot be empty")
+            if any(len(col.strip()) > 50 for col in self.custom_columns):
+                raise ValueError("Column names must be 50 characters or less")
         return self
 
 
@@ -38,10 +42,10 @@ class BoardCreated(BaseModel):
 
 
 class BoardUpdate(BaseModel):
-    title: str | None = None
-    description: str | None = None
+    title: str | None = Field(None, min_length=1, max_length=100)
+    description: str | None = Field(None, max_length=500)
     is_readonly_default: bool | None = None
-    password: str | None = None
+    password: str | None = Field(None, min_length=4)
 
 
 class BoardInfo(ORMBase):

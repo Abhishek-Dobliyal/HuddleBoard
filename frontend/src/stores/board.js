@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '../lib/api'
+import { getErrorMessage } from '../lib/errors'
 
 export const useBoardStore = defineStore('board', () => {
   const board = ref(null)
@@ -9,6 +10,7 @@ export const useBoardStore = defineStore('board', () => {
   const loading = ref(false)
   const error = ref(null)
   const adminToken = ref(null)
+  const boardPassword = ref(null)
   const onlineUsers = ref(0)
 
   const isAdmin = computed(() => !!adminToken.value)
@@ -29,7 +31,7 @@ export const useBoardStore = defineStore('board', () => {
     try {
       return await fn()
     } catch (err) {
-      error.value = err.response?.data?.detail || 'Something went wrong'
+      error.value = getErrorMessage(err)
       throw err
     }
   }
@@ -52,6 +54,7 @@ export const useBoardStore = defineStore('board', () => {
       if (adminToken.value) headers['X-Admin-Token'] = adminToken.value
 
       const { data } = await apiCall(() => api.get(`/api/boards/${boardId}`, { headers }))
+      boardPassword.value = password
       board.value = data.board
       columns.value = data.columns
       cards.value = data.cards
@@ -61,20 +64,23 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  function adminHeaders() {
-    return adminToken.value ? { 'X-Admin-Token': adminToken.value } : {}
+  function authHeaders() {
+    const headers = {}
+    if (adminToken.value) headers['X-Admin-Token'] = adminToken.value
+    if (boardPassword.value) headers['X-Board-Password'] = boardPassword.value
+    return headers
   }
 
   async function updateBoard(boardId, payload) {
     const { data } = await apiCall(() =>
-      api.patch(`/api/boards/${boardId}`, payload, { headers: adminHeaders() })
+      api.patch(`/api/boards/${boardId}`, payload, { headers: authHeaders() })
     )
     board.value = data
   }
 
   async function deleteBoard(boardId) {
     await apiCall(() =>
-      api.delete(`/api/boards/${boardId}`, { headers: adminHeaders() })
+      api.delete(`/api/boards/${boardId}`, { headers: authHeaders() })
     )
     resetState()
   }
@@ -83,7 +89,7 @@ export const useBoardStore = defineStore('board', () => {
     const { data } = await apiCall(() =>
       api.post(`/api/boards/${boardId}/cards`, {
         column_id: columnId, text, author_name: authorName, color,
-      }, { headers: adminHeaders() })
+      }, { headers: authHeaders() })
     )
     onCardAdded(data)
     return data
@@ -91,19 +97,19 @@ export const useBoardStore = defineStore('board', () => {
 
   async function updateCard(cardId, text) {
     const { data } = await apiCall(() =>
-      api.patch(`/api/cards/${cardId}`, { text }, { headers: adminHeaders() })
+      api.patch(`/api/cards/${cardId}`, { text }, { headers: authHeaders() })
     )
     onCardUpdated(data)
     return data
   }
 
   async function deleteCard(cardId) {
-    await apiCall(() => api.delete(`/api/cards/${cardId}`, { headers: adminHeaders() }))
+    await apiCall(() => api.delete(`/api/cards/${cardId}`, { headers: authHeaders() }))
     onCardDeleted(cardId)
   }
 
   async function voteCard(cardId) {
-    const { data } = await apiCall(() => api.post(`/api/cards/${cardId}/vote`))
+    const { data } = await apiCall(() => api.post(`/api/cards/${cardId}/vote`, null, { headers: authHeaders() }))
     onCardVoted(data.id, data.votes)
     return data
   }
@@ -130,7 +136,7 @@ export const useBoardStore = defineStore('board', () => {
 
   async function moveCard(cardId, columnId) {
     const { data } = await apiCall(() =>
-      api.patch(`/api/cards/${cardId}/move`, { column_id: columnId }, { headers: adminHeaders() })
+      api.patch(`/api/cards/${cardId}/move`, { column_id: columnId }, { headers: authHeaders() })
     )
     onCardMoved(data.id, data.column_id)
     return data
@@ -156,6 +162,7 @@ export const useBoardStore = defineStore('board', () => {
     loading.value = false
     error.value = null
     adminToken.value = null
+    boardPassword.value = null
     onlineUsers.value = 0
   }
 

@@ -5,6 +5,7 @@ import { useBoardStore } from '../stores/board'
 import { useWsStore } from '../stores/ws'
 import { useCountdown } from '../composables/useCountdown'
 import { useClipboard } from '../composables/useClipboard'
+import { STORAGE_KEY_ADMIN_PREFIX } from '../constants/board'
 import BoardColumn from '../components/board/BoardColumn.vue'
 import AdminPanel from '../components/ui/AdminPanel.vue'
 import PasswordModal from '../components/ui/PasswordModal.vue'
@@ -16,7 +17,7 @@ const wsStore = useWsStore()
 const { copy } = useClipboard()
 
 const boardId = route.params.id
-const STORAGE_KEY = `hb_admin_${boardId}`
+const STORAGE_KEY = `${STORAGE_KEY_ADMIN_PREFIX}${boardId}`
 const adminToken = route.query.admin || sessionStorage.getItem(STORAGE_KEY) || null
 const needsPassword = ref(false)
 const passwordModalRef = ref(null)

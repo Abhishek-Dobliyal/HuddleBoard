@@ -57,7 +57,7 @@ export const useWsStore = defineStore('ws', () => {
         boardStore.cards = msg.data.cards
         break
       case 'board:updated':
-        Object.assign(boardStore.board, msg.data)
+        if (boardStore.board) Object.assign(boardStore.board, msg.data)
         if (msg.data.is_readonly_default !== undefined) {
           showToast(
             msg.data.is_readonly_default ? 'Board is now read-only' : 'Board is now editable',
