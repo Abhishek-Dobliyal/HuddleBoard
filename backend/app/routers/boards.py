@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.limiter import limiter
+from app.limiter import limiter, RATE_BOARD_CREATE, RATE_BOARD_FETCH
 from app.models import Board, Column, utcnow
 from app.schemas import (
     BoardCreate, BoardCreated, BoardUpdate, BoardInfo,
@@ -54,7 +54,7 @@ async def get_board_as_admin(board_id: str, admin_token: str, db: AsyncSession) 
 
 
 @router.post("", response_model=BoardCreated)
-@limiter.limit("10/minute")
+@limiter.limit(RATE_BOARD_CREATE)
 async def create_board(request: Request, payload: BoardCreate, db: AsyncSession = Depends(get_db)):
     """Create a new board with columns based on template."""
     password_hash = hash_password(payload.password) if payload.password else None
@@ -93,7 +93,7 @@ async def create_board(request: Request, payload: BoardCreate, db: AsyncSession 
 
 
 @router.get("/{board_id}", response_model=BoardFull)
-@limiter.limit("10/minute")
+@limiter.limit(RATE_BOARD_FETCH)
 async def get_board(
     request: Request,
     board_id: str,

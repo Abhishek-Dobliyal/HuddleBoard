@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.limiter import limiter
+from app.limiter import limiter, RATE_CARD_VOTE
 from app.models import Card, Column, utcnow
 from app.schemas import CardCreate, CardUpdate, CardMove, CardInfo
 
@@ -131,7 +131,7 @@ async def delete_card(
 
 
 @router.post("/api/cards/{card_id}/vote", response_model=CardInfo)
-@limiter.limit("30/minute")
+@limiter.limit(RATE_CARD_VOTE)
 async def vote_card(
     request: Request,
     card_id: str,

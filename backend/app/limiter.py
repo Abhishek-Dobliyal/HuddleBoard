@@ -9,3 +9,7 @@ limiter = Limiter(
     key_func=get_remote_address,
     storage_uri=storage_uri,
 )
+
+RATE_BOARD_CREATE = "5/minute"
+RATE_BOARD_FETCH = "10/minute"
+RATE_CARD_VOTE = "10/minute"
