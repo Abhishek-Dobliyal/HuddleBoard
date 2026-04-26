@@ -9,7 +9,11 @@ from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+
 from app.database import async_session, create_tables
+from app.limiter import limiter
 from app.models import Board, utcnow
 from app.routers import boards, cards
 from app.routers.boards import verify_password
@@ -65,6 +69,9 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.include_router(boards.router)
 app.include_router(cards.router)

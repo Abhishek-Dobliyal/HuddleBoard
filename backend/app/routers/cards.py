@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
+from app.limiter import limiter
 from app.models import Card, Column, utcnow
 from app.schemas import CardCreate, CardUpdate, CardMove, CardInfo
 
@@ -12,14 +13,6 @@ router = APIRouter(tags=["cards"])
 
 def is_board_admin(board, admin_token: str | None) -> bool:
     return admin_token is not None and admin_token == board.admin_token
-
-
-async def get_card_or_404(card_id: str, db: AsyncSession) -> Card:
-    result = await db.execute(select(Card).where(Card.id == card_id))
-    card = result.scalar_one_or_none()
-    if not card:
-        raise HTTPException(status_code=404, detail="Card not found")
-    return card
 
 
 async def get_card_with_board(card_id: str, db: AsyncSession) -> Card:
@@ -138,13 +131,18 @@ async def delete_card(
 
 
 @router.post("/api/cards/{card_id}/vote", response_model=CardInfo)
+@limiter.limit("30/minute")
 async def vote_card(
+    request: Request,
     card_id: str,
     db: AsyncSession = Depends(get_db),
 ) -> CardInfo:
     """Increment vote count on a card (atomic)."""
+    card = await get_card_with_board(card_id, db)
+    assert_not_expired(card.column.board)
+
     await db.execute(
         update(Card).where(Card.id == card_id).values(votes=Card.votes + 1)
     )
-    card = await get_card_or_404(card_id, db)
+    await db.refresh(card)
     return CardInfo.model_validate(card)

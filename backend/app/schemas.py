@@ -24,8 +24,11 @@ class BoardCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_custom_columns(self):
-        if self.template == "custom" and not self.custom_columns:
-            raise ValueError("custom_columns required when template is 'custom'")
+        if self.template == "custom":
+            if not self.custom_columns:
+                raise ValueError("custom_columns required when template is 'custom'")
+            if any(not col.strip() for col in self.custom_columns):
+                raise ValueError("Column names cannot be empty")
         return self
 
 

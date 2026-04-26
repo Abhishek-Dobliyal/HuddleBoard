@@ -31,8 +31,11 @@ export const useWsStore = defineStore('ws', () => {
       }
     }
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
       connected.value = false
+      if (event.code >= 4000 && event.code < 5000) {
+        return
+      }
       const { showToast } = useToast()
       showToast('Connection lost. Reconnecting...', 'warning')
       scheduleReconnect()
@@ -54,8 +57,8 @@ export const useWsStore = defineStore('ws', () => {
         boardStore.cards = msg.data.cards
         break
       case 'board:updated':
+        Object.assign(boardStore.board, msg.data)
         if (msg.data.is_readonly_default !== undefined) {
-          boardStore.board.is_readonly_default = msg.data.is_readonly_default
           showToast(
             msg.data.is_readonly_default ? 'Board is now read-only' : 'Board is now editable',
             'info',

@@ -1,11 +1,12 @@
 from datetime import timedelta
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
+from app.limiter import limiter
 from app.models import Board, Column, utcnow
 from app.schemas import (
     BoardCreate, BoardCreated, BoardUpdate, BoardInfo,
@@ -53,7 +54,8 @@ async def get_board_as_admin(board_id: str, admin_token: str, db: AsyncSession) 
 
 
 @router.post("", response_model=BoardCreated)
-async def create_board(payload: BoardCreate, db: AsyncSession = Depends(get_db)):
+@limiter.limit("10/minute")
+async def create_board(request: Request, payload: BoardCreate, db: AsyncSession = Depends(get_db)):
     """Create a new board with columns based on template."""
     password_hash = hash_password(payload.password) if payload.password else None
 
@@ -91,7 +93,9 @@ async def create_board(payload: BoardCreate, db: AsyncSession = Depends(get_db))
 
 
 @router.get("/{board_id}", response_model=BoardFull)
+@limiter.limit("10/minute")
 async def get_board(
+    request: Request,
     board_id: str,
     password: str | None = Query(None),
     admin_token: str | None = Query(None),
