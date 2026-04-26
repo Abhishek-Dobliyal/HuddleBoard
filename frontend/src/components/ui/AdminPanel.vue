@@ -63,7 +63,6 @@ async function handleDelete() {
 </script>
 
 <template>
-  <!-- Overlay -->
   <transition
     enter-active-class="transition-opacity duration-200"
     leave-active-class="transition-opacity duration-200"
@@ -73,13 +72,11 @@ async function handleDelete() {
     <div v-if="show" class="fixed inset-0 bg-black/20 z-40 cursor-pointer" @click="emit('close')"></div>
   </transition>
 
-  <!-- Panel -->
   <transition
     enter-active-class="animate__animated animate__slideInRight animate__faster"
     leave-active-class="animate__animated animate__slideOutRight animate__faster"
   >
     <div v-if="show" class="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-50 flex flex-col">
-      <!-- Header -->
       <div class="flex items-center justify-between p-4 border-b border-gray-200">
         <h3 class="font-semibold text-gray-800">
           <font-awesome-icon icon="gear" class="mr-2 text-gray-400" />
@@ -90,9 +87,7 @@ async function handleDelete() {
         </button>
       </div>
 
-      <!-- Content -->
       <div class="flex-1 overflow-y-auto p-4 space-y-5">
-        <!-- Share Links -->
         <div>
           <h4 class="text-sm font-medium text-gray-700 mb-2">Share Links</h4>
           <div class="space-y-2">
@@ -115,11 +110,9 @@ async function handleDelete() {
           </div>
         </div>
 
-        <!-- Settings -->
         <div>
           <h4 class="text-sm font-medium text-gray-700 mb-2">Settings</h4>
           <div class="space-y-3">
-            <!-- Read-only toggle -->
             <label class="flex items-center justify-between cursor-pointer p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
               <div>
                 <span class="text-sm text-gray-700">Read-only mode</span>
@@ -135,7 +128,6 @@ async function handleDelete() {
           </div>
         </div>
 
-        <!-- Board Info -->
         <div>
           <h4 class="text-sm font-medium text-gray-700 mb-2">Board Info</h4>
           <div class="bg-gray-50 rounded-lg p-3 space-y-1 text-sm">
@@ -161,7 +153,6 @@ async function handleDelete() {
           </div>
         </div>
 
-        <!-- Danger Zone -->
         <div>
           <h4 class="text-sm font-medium text-red-600 mb-2">Danger Zone</h4>
           <div v-if="!confirmDelete">

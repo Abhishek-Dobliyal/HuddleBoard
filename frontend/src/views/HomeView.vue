@@ -99,28 +99,23 @@ const features = [
   <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
     <div class="min-h-screen flex flex-col lg:flex-row">
 
-      <!-- LEFT HALF: Hero / Marketing -->
       <div class="lg:w-1/2 flex flex-col justify-center px-8 md:px-16 py-12 lg:py-0 lg:sticky lg:top-0 lg:h-screen">
         <div class="max-w-lg mx-auto lg:mx-0">
-          <!-- Logo -->
           <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight leading-tight">
             Huddle<span class="text-indigo-600">Board</span>
           </h1>
 
-          <!-- Typewriter -->
           <div class="mt-6 h-16">
             <p class="text-2xl md:text-3xl font-light text-gray-600">
               <span>{{ displayText }}</span><span class="typewriter-cursor text-indigo-500">|</span>
             </p>
           </div>
 
-          <!-- Tagline -->
           <p class="mt-6 text-lg text-gray-400 leading-relaxed max-w-md">
             The simplest way to run retrospectives, brainstorm ideas, and collect feedback.
             Create a board in seconds — share the link — collaborate live.
           </p>
 
-          <!-- Feature pills -->
           <div class="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div
               v-for="feature in features"
@@ -137,7 +132,6 @@ const features = [
             </div>
           </div>
 
-          <!-- Social proof / stat -->
           <div class="mt-12 flex items-center gap-4 text-sm text-gray-400">
             <div class="flex -space-x-2">
               <div class="w-8 h-8 rounded-full bg-indigo-200 border-2 border-white flex items-center justify-center text-xs font-bold text-indigo-700">A</div>
@@ -149,7 +143,6 @@ const features = [
         </div>
       </div>
 
-      <!-- RIGHT HALF: Create Board Form -->
       <div class="lg:w-1/2 flex items-center justify-center px-4 md:px-8 py-12 lg:py-0 lg:min-h-screen">
         <div class="w-full max-w-lg">
           <form @submit.prevent="handleCreate" class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
@@ -158,7 +151,6 @@ const features = [
               Create a new board
             </h2>
 
-            <!-- Title -->
             <div class="mb-4">
               <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Board title *</label>
               <input
@@ -171,7 +163,6 @@ const features = [
               />
             </div>
 
-            <!-- Description -->
             <div class="mb-4">
               <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description <span class="text-gray-400">(optional)</span></label>
               <textarea
@@ -184,7 +175,6 @@ const features = [
               ></textarea>
             </div>
 
-            <!-- Template Picker -->
             <div class="mb-4">
               <label class="block text-sm font-medium text-gray-700 mb-2">Template</label>
               <div class="grid grid-cols-3 gap-2">
@@ -206,7 +196,6 @@ const features = [
               </div>
             </div>
 
-            <!-- Template Preview -->
             <transition
               enter-active-class="animate__animated animate__fadeIn animate__faster"
               leave-active-class="animate__animated animate__fadeOut animate__faster"
@@ -223,7 +212,6 @@ const features = [
               </div>
             </transition>
 
-            <!-- Custom Columns -->
             <transition
               enter-active-class="animate__animated animate__fadeIn animate__faster"
               leave-active-class="animate__animated animate__fadeOut animate__faster"
@@ -260,7 +248,6 @@ const features = [
               </div>
             </transition>
 
-            <!-- TTL Slider -->
             <div class="mb-4">
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 Board expires in: <span class="text-indigo-600 font-semibold">{{ ttlHours }}h</span>
@@ -279,7 +266,6 @@ const features = [
               </div>
             </div>
 
-            <!-- Advanced Options Toggle -->
             <button
               type="button"
               @click="showAdvanced = !showAdvanced"
@@ -293,13 +279,11 @@ const features = [
               />
             </button>
 
-            <!-- Advanced Options -->
             <transition
               enter-active-class="animate__animated animate__fadeIn animate__faster"
               leave-active-class="animate__animated animate__fadeOut animate__faster"
             >
               <div v-if="showAdvanced" class="mb-4 space-y-4 p-4 bg-gray-50 rounded-lg">
-                <!-- Password -->
                 <div>
                   <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
                     <font-awesome-icon icon="lock" class="mr-1 text-gray-400" />
@@ -314,7 +298,6 @@ const features = [
                   />
                 </div>
 
-                <!-- Read Only -->
                 <label class="flex items-center gap-3 cursor-pointer">
                   <input
                     v-model="isReadOnly"
@@ -329,7 +312,6 @@ const features = [
               </div>
             </transition>
 
-            <!-- Error -->
             <transition
               enter-active-class="animate__animated animate__shakeX animate__faster"
               leave-active-class="animate__animated animate__fadeOut animate__faster"
@@ -339,7 +321,6 @@ const features = [
               </div>
             </transition>
 
-            <!-- Submit -->
             <button
               type="submit"
               :disabled="!canSubmit || isCreating"

@@ -10,11 +10,9 @@ export function useTypewriter(phrases, { typeSpeed = 60, deleteSpeed = 35, pause
     const currentPhrase = phrases[currentPhraseIndex.value]
 
     if (!isDeleting.value) {
-      // Typing
       displayText.value = currentPhrase.substring(0, displayText.value.length + 1)
 
       if (displayText.value === currentPhrase) {
-        // Finished typing — pause then start deleting
         timeout = setTimeout(() => {
           isDeleting.value = true
           tick()
@@ -24,7 +22,6 @@ export function useTypewriter(phrases, { typeSpeed = 60, deleteSpeed = 35, pause
 
       timeout = setTimeout(tick, typeSpeed)
     } else {
-      // Deleting
       displayText.value = currentPhrase.substring(0, displayText.value.length - 1)
 
       if (displayText.value === '') {

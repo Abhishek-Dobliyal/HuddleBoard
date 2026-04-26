@@ -3,7 +3,6 @@ import ToastNotification from './components/ui/ToastNotification.vue'
 </script>
 
 <template>
-  <!-- Mobile blocker -->
   <div class="flex md:hidden min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-6">
     <div class="text-center max-w-sm">
       <h1 class="text-3xl font-bold text-gray-900 mb-2">
@@ -19,7 +18,6 @@ import ToastNotification from './components/ui/ToastNotification.vue'
     </div>
   </div>
 
-  <!-- App content (tablet and above) -->
   <div class="hidden md:block min-h-screen bg-gray-50">
     <router-view v-slot="{ Component }">
       <transition name="fade" mode="out-in">

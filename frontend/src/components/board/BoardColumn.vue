@@ -27,18 +27,13 @@ const localCards = computed({
 })
 
 async function onChange(evt) {
-  // Only act on the "added" side (card dropped INTO this column)
   if (!evt.added) return
 
   const card = evt.added.element
   const targetColumnId = props.column.id
-
-  // Skip if card is already in this column
   if (card.column_id === targetColumnId) return
 
   const oldColumnId = card.column_id
-
-  // Update local state immediately so UI reflects the move
   boardStore.onCardMoved(card.id, targetColumnId)
 
   try {
@@ -67,7 +62,6 @@ const columnStyle = computed(() => {
 
 <template>
   <div :class="['flex-1 min-w-[280px] max-w-[400px] flex flex-col rounded-xl border border-gray-200 border-t-4', columnStyle]">
-    <!-- Column Header -->
     <div class="px-4 py-3 flex items-center justify-between">
       <h3 class="font-semibold text-gray-700 text-sm uppercase tracking-wide">
         {{ column.title }}
@@ -77,7 +71,6 @@ const columnStyle = computed(() => {
       </span>
     </div>
 
-    <!-- Cards List -->
     <draggable
       :list="localCards"
       group="cards"
@@ -97,7 +90,6 @@ const columnStyle = computed(() => {
       </template>
     </draggable>
 
-    <!-- Add Card -->
     <AddCardForm
       v-if="!readOnly"
       :board-id="boardId"
