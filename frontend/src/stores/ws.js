@@ -75,6 +75,9 @@ export const useWsStore = defineStore('ws', () => {
       case 'card:voted':
         boardStore.onCardVoted(msg.data.card_id, msg.data.votes)
         break
+      case 'card:moved':
+        boardStore.onCardMoved(msg.data.card_id, msg.data.column_id)
+        break
       case 'user:joined':
       case 'user:left':
         boardStore.setOnlineUsers(msg.data.count)

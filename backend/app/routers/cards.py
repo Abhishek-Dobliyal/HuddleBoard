@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.models import Board, Card, Column, utcnow
-from app.schemas import CardCreate, CardUpdate, CardInfo
+from app.schemas import CardCreate, CardUpdate, CardMove, CardInfo
 
 router = APIRouter(tags=["cards"])
 
@@ -62,6 +62,42 @@ async def update_card(
     """Update card text."""
     card = await get_card_or_404(card_id, db)
     card.text = payload.text
+    return CardInfo.model_validate(card)
+
+
+@router.patch("/api/cards/{card_id}/move", response_model=CardInfo)
+async def move_card(
+    card_id: str,
+    payload: CardMove,
+    db: AsyncSession = Depends(get_db),
+):
+    """Move a card to a different column."""
+    card = await get_card_or_404(card_id, db)
+
+    # Verify target column exists and is on the same board
+    result = await db.execute(
+        select(Column)
+        .where(Column.id == payload.column_id)
+        .options(selectinload(Column.board))
+    )
+    target_column = result.scalar_one_or_none()
+
+    if not target_column:
+        raise HTTPException(status_code=404, detail="Target column not found")
+
+    # Get source column to verify same board
+    source_result = await db.execute(
+        select(Column).where(Column.id == card.column_id)
+    )
+    source_column = source_result.scalar_one_or_none()
+
+    if not source_column or source_column.board_id != target_column.board_id:
+        raise HTTPException(status_code=400, detail="Cannot move card across boards")
+
+    if target_column.board.is_readonly_default:
+        raise HTTPException(status_code=403, detail="Board is read-only")
+
+    card.column_id = payload.column_id
     return CardInfo.model_validate(card)
 
 

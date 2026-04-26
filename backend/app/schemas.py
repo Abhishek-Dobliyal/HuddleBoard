@@ -80,6 +80,10 @@ class CardUpdate(BaseModel):
     text: str = Field(..., min_length=1, max_length=500)
 
 
+class CardMove(BaseModel):
+    column_id: str
+
+
 class CardInfo(ORMBase):
     id: str
     column_id: str

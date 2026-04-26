@@ -127,6 +127,17 @@ export const useBoardStore = defineStore('board', () => {
     if (card) card.votes = votes
   }
 
+  async function moveCard(cardId, columnId) {
+    const { data } = await apiCall(() => axios.patch(`/api/cards/${cardId}/move`, { column_id: columnId }))
+    onCardMoved(data.id, data.column_id)
+    return data
+  }
+
+  function onCardMoved(cardId, columnId) {
+    const card = cards.value.find((c) => c.id === cardId)
+    if (card) card.column_id = columnId
+  }
+
   function setOnlineUsers(count) {
     onlineUsers.value = count
   }
@@ -149,8 +160,8 @@ export const useBoardStore = defineStore('board', () => {
     board, columns, cards, loading, error, adminToken, onlineUsers,
     isAdmin, isReadOnly, isPasswordProtected, boardTitle, expiresAt, columnsSorted,
     cardsByColumn, createBoard, fetchBoard, updateBoard, deleteBoard,
-    addCard, updateCard, deleteCard, voteCard,
-    onCardAdded, onCardUpdated, onCardDeleted, onCardVoted,
+    addCard, updateCard, deleteCard, voteCard, moveCard,
+    onCardAdded, onCardUpdated, onCardDeleted, onCardVoted, onCardMoved,
     setOnlineUsers, setAdminToken, resetState,
   }
 })

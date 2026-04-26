@@ -87,7 +87,7 @@ async function handleDelete() {
 </script>
 
 <template>
-  <div :class="['p-3 rounded-lg border card-shadow hover:card-shadow-hover transition-all duration-200 relative group hover:-translate-y-0.5', cardColor]">
+  <div :class="['p-3 rounded-lg border card-shadow hover:card-shadow-hover transition-all duration-200 relative group hover:-translate-y-0.5', cardColor, !readOnly && !isEditing ? 'cursor-grab active:cursor-grabbing' : '']">
     <div v-if="isEditing" class="animate__animated animate__fadeIn animate__faster">
       <textarea
         ref="editInput"

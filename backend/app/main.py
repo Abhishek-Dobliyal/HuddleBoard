@@ -26,6 +26,7 @@ WS_EVENT_MAP = {
     "card:update": "card:updated",
     "card:delete": "card:deleted",
     "card:vote": "card:voted",
+    "card:move": "card:moved",
     "board:update": "board:updated",
 }
 

@@ -1,5 +1,9 @@
 <script setup>
 import { computed } from 'vue'
+import draggable from 'vuedraggable'
+import { useBoardStore } from '../../stores/board'
+import { useWsStore } from '../../stores/ws'
+import { useToast } from '../../composables/useToast'
 import BoardCard from './BoardCard.vue'
 import AddCardForm from './AddCardForm.vue'
 
@@ -10,7 +14,37 @@ const props = defineProps({
   readOnly: { type: Boolean, default: false },
 })
 
+const boardStore = useBoardStore()
+const wsStore = useWsStore()
+const { showToast } = useToast()
+
 const cardCount = computed(() => props.cards.length)
+
+// Writable computed for vuedraggable — it needs v-model
+const draggableCards = computed({
+  get: () => props.cards,
+  set: () => {
+    // Actual move is handled in onEnd
+  },
+})
+
+async function onEnd(evt) {
+  // Only handle cross-column moves (same column reorder not supported by backend)
+  if (evt.from === evt.to) return
+
+  const cardId = evt.item.dataset.cardId
+  const targetColumnId = evt.to.dataset.columnId
+  if (!cardId || !targetColumnId) return
+
+  try {
+    const updated = await boardStore.moveCard(cardId, targetColumnId)
+    wsStore.send('card:move', { card_id: updated.id, column_id: updated.column_id })
+  } catch {
+    // Revert: move card back to original column in local state
+    boardStore.onCardMoved(cardId, evt.from.dataset.columnId)
+    showToast('Failed to move card.', 'error')
+  }
+}
 
 // Column colors
 const colorMap = {
@@ -41,19 +75,27 @@ const columnStyle = computed(() => {
     </div>
 
     <!-- Cards List -->
-    <div class="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
-      <transition-group
-        enter-active-class="animate__animated animate__fadeInUp animate__faster"
-        leave-active-class="animate__animated animate__fadeOutDown animate__faster"
-      >
-        <BoardCard
-          v-for="card in cards"
-          :key="card.id"
-          :card="card"
-          :read-only="readOnly"
-        />
-      </transition-group>
-    </div>
+    <draggable
+      v-model="draggableCards"
+      group="cards"
+      item-key="id"
+      :disabled="readOnly"
+      :data-column-id="column.id"
+      class="flex-1 overflow-y-auto px-3 pb-3 space-y-2 min-h-[40px]"
+      ghost-class="drag-ghost"
+      drag-class="drag-active"
+      :animation="150"
+      @end="onEnd"
+    >
+      <template #item="{ element }">
+        <div :data-card-id="element.id">
+          <BoardCard
+            :card="element"
+            :read-only="readOnly"
+          />
+        </div>
+      </template>
+    </draggable>
 
     <!-- Add Card -->
     <AddCardForm
@@ -63,3 +105,15 @@ const columnStyle = computed(() => {
     />
   </div>
 </template>
+
+<style scoped>
+.drag-ghost {
+  opacity: 0.4;
+}
+
+.drag-active {
+  opacity: 0.9;
+  transform: rotate(2deg);
+  cursor: grabbing;
+}
+</style>
