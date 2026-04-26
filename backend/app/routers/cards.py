@@ -154,13 +154,14 @@ async def delete_card(
 async def vote_card(
     request: Request,
     card_id: str,
+    x_admin_token: str | None = Header(None),
     x_board_password: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ) -> CardInfo:
     """Increment vote count on a card (atomic)."""
     card = await get_card_with_board(card_id, db)
     assert_not_expired(card.column.board)
-    assert_board_access(card.column.board, None, x_board_password)
+    assert_board_access(card.column.board, x_admin_token, x_board_password)
 
     await db.execute(
         update(Card).where(Card.id == card_id).values(votes=Card.votes + 1)
