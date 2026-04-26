@@ -7,7 +7,6 @@ import { useTypewriter } from '../composables/useTypewriter'
 const router = useRouter()
 const boardStore = useBoardStore()
 
-// Typewriter
 const { displayText } = useTypewriter([
   'Brainstorm ideas together.',
   'Run better retrospectives.',
@@ -17,7 +16,6 @@ const { displayText } = useTypewriter([
   'Ship better as a team.',
 ], { typeSpeed: 55, deleteSpeed: 30, pauseAfterType: 2200 })
 
-// Form state
 const title = ref('')
 const description = ref('')
 const template = ref('retrospective')

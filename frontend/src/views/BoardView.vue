@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useBoardStore } from '../stores/board'
 import { useWsStore } from '../stores/ws'
 import { useCountdown } from '../composables/useCountdown'
-import { useToast } from '../composables/useToast'
+import { useClipboard } from '../composables/useClipboard'
 import BoardColumn from '../components/board/BoardColumn.vue'
 import AdminPanel from '../components/ui/AdminPanel.vue'
 import PasswordModal from '../components/ui/PasswordModal.vue'
@@ -13,7 +13,7 @@ const route = useRoute()
 const router = useRouter()
 const boardStore = useBoardStore()
 const wsStore = useWsStore()
-const { showToast } = useToast()
+const { copy } = useClipboard()
 
 const boardId = route.params.id
 const adminToken = route.query.admin || null
@@ -32,13 +32,8 @@ const { display: countdownDisplay, isExpired } = useCountdown(
 
 const shareUrl = computed(() => `${window.location.origin}/board/${boardId}`)
 
-async function copyShareUrl() {
-  try {
-    await navigator.clipboard.writeText(shareUrl.value)
-    showToast('Share link copied!', 'success')
-  } catch {
-    showToast('Failed to copy link.', 'error')
-  }
+function copyShareUrl() {
+  copy(shareUrl.value, 'Share link copied!')
 }
 
 async function loadBoard(password = null) {
@@ -164,7 +159,7 @@ onUnmounted(() => {
     <main class="flex-1 overflow-x-auto overflow-y-hidden p-4 min-h-0">
       <div class="flex gap-4 h-full max-w-screen-2xl mx-auto">
         <BoardColumn
-          v-for="(column, idx) in boardStore.columnsSorted"
+          v-for="column in boardStore.columnsSorted"
           :key="column.id"
           :column="column"
           :cards="boardStore.cardsByColumn(column.id)"

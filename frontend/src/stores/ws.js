@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useBoardStore } from './board'
 import { useToast } from '../composables/useToast'
+import { WS_RECONNECT_DELAY_MS } from '../constants/board'
 
 export const useWsStore = defineStore('ws', () => {
   const socket = ref(null)
@@ -103,7 +104,7 @@ export const useWsStore = defineStore('ws', () => {
 
   function scheduleReconnect(id, adminToken) {
     clearReconnectTimer()
-    reconnectTimer.value = setTimeout(() => connect(id, adminToken), 3000)
+    reconnectTimer.value = setTimeout(() => connect(id, adminToken), WS_RECONNECT_DELAY_MS)
   }
 
   function clearReconnectTimer() {
@@ -113,5 +114,5 @@ export const useWsStore = defineStore('ws', () => {
     }
   }
 
-  return { socket, connected, connect, disconnect, send }
+  return { connected, connect, disconnect, send }
 })

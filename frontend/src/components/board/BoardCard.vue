@@ -1,8 +1,9 @@
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useBoardStore } from '../../stores/board'
 import { useWsStore } from '../../stores/ws'
 import { useToast } from '../../composables/useToast'
+import { STICKY_COLOR_CLASSES, LIMITS } from '../../constants/board'
 
 const props = defineProps({
   card: { type: Object, required: true },
@@ -20,16 +21,8 @@ const isVoting = ref(false)
 const isDeleting = ref(false)
 const showConfirmDelete = ref(false)
 
-const stickyColors = {
-  yellow: 'bg-yellow-100 border-yellow-200',
-  pink: 'bg-pink-100 border-pink-200',
-  blue: 'bg-blue-100 border-blue-200',
-  green: 'bg-green-100 border-green-200',
-  purple: 'bg-purple-100 border-purple-200',
-  default: 'bg-yellow-100 border-yellow-200',
-}
-
-const cardColor = stickyColors[props.card.color] || stickyColors.default
+const DEFAULT_COLOR_CLASS = 'bg-yellow-100 border-yellow-200'
+const cardColor = computed(() => STICKY_COLOR_CLASSES[props.card.color] || DEFAULT_COLOR_CLASS)
 
 function startEdit() {
   if (props.readOnly) return
@@ -93,7 +86,7 @@ async function handleDelete() {
         ref="editInput"
         v-model="editText"
         rows="3"
-        maxlength="500"
+        :maxlength="LIMITS.CARD_TEXT"
         class="w-full px-2 py-1 border border-gray-200 rounded text-sm resize-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 bg-white"
         @keydown.enter.ctrl="saveEdit"
         @keydown.escape="cancelEdit"

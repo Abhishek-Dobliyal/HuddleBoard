@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useBoardStore } from '../../stores/board'
 import { useWsStore } from '../../stores/ws'
 import { useToast } from '../../composables/useToast'
+import { STICKY_COLORS, STICKY_PICKER_CLASSES, LIMITS, STORAGE_KEY_AUTHOR } from '../../constants/board'
 
 const props = defineProps({
   boardId: { type: String, required: true },
@@ -14,12 +15,10 @@ const wsStore = useWsStore()
 const { showToast } = useToast()
 
 const text = ref('')
-const authorName = ref(localStorage.getItem('hb_author') || '')
+const authorName = ref(localStorage.getItem(STORAGE_KEY_AUTHOR) || '')
 const isExpanded = ref(false)
 const isSubmitting = ref(false)
-
-const stickyColors = ['yellow', 'pink', 'blue', 'green', 'purple']
-const selectedColor = ref(stickyColors[Math.floor(Math.random() * stickyColors.length)])
+const selectedColor = ref(STICKY_COLORS[Math.floor(Math.random() * STICKY_COLORS.length)])
 
 function expand() {
   isExpanded.value = true
@@ -39,7 +38,7 @@ async function handleSubmit() {
   const author = authorName.value.trim() || 'Anonymous'
 
   if (authorName.value.trim()) {
-    localStorage.setItem('hb_author', authorName.value.trim())
+    localStorage.setItem(STORAGE_KEY_AUTHOR, authorName.value.trim())
   }
 
   try {
@@ -47,11 +46,9 @@ async function handleSubmit() {
       props.boardId, props.columnId, trimmed, author, selectedColor.value,
     )
 
-    // Notify other clients via WS (local state already updated by store)
     wsStore.send('card:add', card)
-
     text.value = ''
-    selectedColor.value = stickyColors[Math.floor(Math.random() * stickyColors.length)]
+    selectedColor.value = STICKY_COLORS[Math.floor(Math.random() * STICKY_COLORS.length)]
   } catch {
     showToast('Failed to add card. Please try again.', 'error')
   } finally {
@@ -79,7 +76,7 @@ async function handleSubmit() {
         <textarea
           v-model="text"
           rows="3"
-          maxlength="500"
+          :maxlength="LIMITS.CARD_TEXT"
           placeholder="Type your idea..."
           class="w-full px-2 py-1.5 border border-gray-200 rounded text-sm resize-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
           @keydown.enter.ctrl="handleSubmit"
@@ -90,26 +87,20 @@ async function handleSubmit() {
           v-model="authorName"
           type="text"
           placeholder="Your name (optional)"
-          maxlength="30"
+          :maxlength="LIMITS.AUTHOR_NAME"
           class="w-full mt-2 px-2 py-1.5 border border-gray-200 rounded text-xs text-gray-600 focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400"
         />
 
         <div class="flex items-center gap-2 mt-2">
           <span class="text-xs text-gray-400">Color:</span>
           <button
-            v-for="color in stickyColors"
+            v-for="color in STICKY_COLORS"
             :key="color"
             type="button"
             @click="selectedColor = color"
             :class="[
               'w-5 h-5 rounded-full border-2 transition-all cursor-pointer hover:scale-125',
-              {
-                yellow: 'bg-yellow-200',
-                pink: 'bg-pink-200',
-                blue: 'bg-blue-200',
-                green: 'bg-green-200',
-                purple: 'bg-purple-200',
-              }[color],
+              STICKY_PICKER_CLASSES[color],
               selectedColor === color ? 'border-indigo-600 scale-110' : 'border-transparent',
             ]"
           ></button>

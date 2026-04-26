@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler()
 cleanup_interval = int(os.getenv("TTL_CLEANUP_INTERVAL_MINUTES", "30"))
 
-WS_EVENT_MAP = {
+WS_EVENT_MAP: dict[str, str] = {
     "card:add": "card:added",
     "card:update": "card:updated",
     "card:delete": "card:deleted",
@@ -57,7 +57,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in origins],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -66,12 +66,20 @@ app.include_router(cards.router)
 
 
 @app.websocket("/ws/{board_id}")
-async def websocket_endpoint(websocket: WebSocket, board_id: str):
+async def websocket_endpoint(websocket: WebSocket, board_id: str) -> None:
     await manager.connect(websocket, board_id)
     try:
         while True:
             data = await websocket.receive_text()
-            message = json.loads(data)
+
+            try:
+                message = json.loads(data)
+            except json.JSONDecodeError:
+                continue
+
+            if not isinstance(message, dict):
+                continue
+
             msg_type = message.get("type")
             msg_data = message.get("data", {})
 
@@ -90,5 +98,5 @@ async def websocket_endpoint(websocket: WebSocket, board_id: str):
 
 
 @app.get("/api/health")
-async def health():
+async def health() -> dict[str, str]:
     return {"status": "ok", "service": "huddleboard"}

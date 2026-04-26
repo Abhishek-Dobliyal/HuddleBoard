@@ -13,7 +13,6 @@ export const useBoardStore = defineStore('board', () => {
 
   const isAdmin = computed(() => !!adminToken.value)
   const isReadOnly = computed(() => board.value?.is_readonly_default && !isAdmin.value)
-  const isPasswordProtected = computed(() => board.value?.has_password)
   const boardTitle = computed(() => board.value?.title || '')
   const expiresAt = computed(() => board.value?.expires_at ? new Date(board.value.expires_at) : null)
 
@@ -62,43 +61,44 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
+  function adminParams() {
+    return adminToken.value ? { admin_token: adminToken.value } : {}
+  }
+
   async function updateBoard(boardId, payload) {
     const { data } = await apiCall(() =>
-      axios.patch(`/api/boards/${boardId}`, payload, {
-        params: { admin_token: adminToken.value },
-      })
+      axios.patch(`/api/boards/${boardId}`, payload, { params: adminParams() })
     )
     board.value = data
   }
 
   async function deleteBoard(boardId) {
     await apiCall(() =>
-      axios.delete(`/api/boards/${boardId}`, {
-        params: { admin_token: adminToken.value },
-      })
+      axios.delete(`/api/boards/${boardId}`, { params: adminParams() })
     )
     resetState()
   }
 
   async function addCard(boardId, columnId, text, authorName, color) {
-    const params = adminToken.value ? { admin_token: adminToken.value } : {}
     const { data } = await apiCall(() =>
       axios.post(`/api/boards/${boardId}/cards`, {
         column_id: columnId, text, author_name: authorName, color,
-      }, { params })
+      }, { params: adminParams() })
     )
     onCardAdded(data)
     return data
   }
 
   async function updateCard(cardId, text) {
-    const { data } = await apiCall(() => axios.patch(`/api/cards/${cardId}`, { text }))
+    const { data } = await apiCall(() =>
+      axios.patch(`/api/cards/${cardId}`, { text }, { params: adminParams() })
+    )
     onCardUpdated(data)
     return data
   }
 
   async function deleteCard(cardId) {
-    await apiCall(() => axios.delete(`/api/cards/${cardId}`))
+    await apiCall(() => axios.delete(`/api/cards/${cardId}`, { params: adminParams() }))
     onCardDeleted(cardId)
   }
 
@@ -129,8 +129,9 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   async function moveCard(cardId, columnId) {
-    const params = adminToken.value ? { admin_token: adminToken.value } : {}
-    const { data } = await apiCall(() => axios.patch(`/api/cards/${cardId}/move`, { column_id: columnId }, { params }))
+    const { data } = await apiCall(() =>
+      axios.patch(`/api/cards/${cardId}/move`, { column_id: columnId }, { params: adminParams() })
+    )
     onCardMoved(data.id, data.column_id)
     return data
   }
@@ -160,7 +161,7 @@ export const useBoardStore = defineStore('board', () => {
 
   return {
     board, columns, cards, loading, error, adminToken, onlineUsers,
-    isAdmin, isReadOnly, isPasswordProtected, boardTitle, expiresAt, columnsSorted,
+    isAdmin, isReadOnly, boardTitle, expiresAt, columnsSorted,
     cardsByColumn, createBoard, fetchBoard, updateBoard, deleteBoard,
     addCard, updateCard, deleteCard, voteCard, moveCard,
     onCardAdded, onCardUpdated, onCardDeleted, onCardVoted, onCardMoved,

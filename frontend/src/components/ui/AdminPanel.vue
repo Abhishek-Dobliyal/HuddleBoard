@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useBoardStore } from '../../stores/board'
 import { useWsStore } from '../../stores/ws'
 import { useToast } from '../../composables/useToast'
+import { useClipboard } from '../../composables/useClipboard'
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -17,35 +18,20 @@ const router = useRouter()
 const boardStore = useBoardStore()
 const wsStore = useWsStore()
 const { showToast } = useToast()
+const { copy } = useClipboard()
 
 const confirmDelete = ref(false)
 
-async function copyShareUrl() {
-  try {
-    await navigator.clipboard.writeText(props.shareUrl)
-    showToast('Share link copied!', 'success')
-  } catch {
-    showToast('Failed to copy link.', 'error')
-  }
+function copyShareUrl() {
+  copy(props.shareUrl, 'Share link copied!')
 }
 
-async function copyBoardId() {
-  try {
-    await navigator.clipboard.writeText(props.boardId)
-    showToast('Board ID copied!', 'success')
-  } catch {
-    showToast('Failed to copy.', 'error')
-  }
+function copyBoardId() {
+  copy(props.boardId, 'Board ID copied!')
 }
 
-async function copyAdminUrl() {
-  try {
-    const adminUrl = `${props.shareUrl}?admin=${boardStore.adminToken}`
-    await navigator.clipboard.writeText(adminUrl)
-    showToast('Admin link copied! Keep this private.', 'success')
-  } catch {
-    showToast('Failed to copy link.', 'error')
-  }
+function copyAdminUrl() {
+  copy(`${props.shareUrl}?admin=${boardStore.adminToken}`, 'Admin link copied! Keep this private.')
 }
 
 async function toggleReadOnly() {

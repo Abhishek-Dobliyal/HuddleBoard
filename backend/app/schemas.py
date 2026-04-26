@@ -1,9 +1,16 @@
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, field_serializer, model_validator
 
 
 class ORMBase(BaseModel):
     model_config = {"from_attributes": True}
+
+
+def _serialize_utc(v: datetime) -> str:
+    """Ensure naive UTC datetimes are serialized with timezone suffix."""
+    if v.tzinfo is None:
+        v = v.replace(tzinfo=timezone.utc)
+    return v.isoformat()
 
 
 class BoardCreate(BaseModel):
@@ -13,7 +20,13 @@ class BoardCreate(BaseModel):
     ttl_hours: int = Field(24, ge=1, le=72)
     password: str | None = None
     is_readonly_default: bool = False
-    custom_columns: list[str] | None = None  # required when template == "custom"
+    custom_columns: list[str] | None = None
+
+    @model_validator(mode="after")
+    def validate_custom_columns(self):
+        if self.template == "custom" and not self.custom_columns:
+            raise ValueError("custom_columns required when template is 'custom'")
+        return self
 
 
 class BoardCreated(BaseModel):
@@ -25,7 +38,7 @@ class BoardUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
     is_readonly_default: bool | None = None
-    password: str | None = None  # set new password, or null to remove
+    password: str | None = None
 
 
 class BoardInfo(ORMBase):
@@ -41,10 +54,7 @@ class BoardInfo(ORMBase):
 
     @field_serializer("expires_at", "created_at")
     def serialize_dt(self, v: datetime, _info) -> str:
-        """Ensure naive UTC datetimes are serialized with Z suffix."""
-        if v.tzinfo is None:
-            v = v.replace(tzinfo=timezone.utc)
-        return v.isoformat()
+        return _serialize_utc(v)
 
     @classmethod
     def from_board(cls, board) -> "BoardInfo":
@@ -95,9 +105,7 @@ class CardInfo(ORMBase):
 
     @field_serializer("created_at")
     def serialize_dt(self, v: datetime, _info) -> str:
-        if v.tzinfo is None:
-            v = v.replace(tzinfo=timezone.utc)
-        return v.isoformat()
+        return _serialize_utc(v)
 
 
 class BoardFull(BaseModel):

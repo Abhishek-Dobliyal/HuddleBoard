@@ -9,10 +9,10 @@ logger = logging.getLogger(__name__)
 class ConnectionManager:
     """Manages WebSocket connections per board room."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.rooms: dict[str, set[WebSocket]] = defaultdict(set)
 
-    async def connect(self, websocket: WebSocket, board_id: str):
+    async def connect(self, websocket: WebSocket, board_id: str) -> None:
         await websocket.accept()
         self.rooms[board_id].add(websocket)
         count = len(self.rooms[board_id])
@@ -22,7 +22,7 @@ class ConnectionManager:
         })
         logger.info("WS connected to board %s (%d users)", board_id, count)
 
-    async def disconnect(self, websocket: WebSocket, board_id: str):
+    async def disconnect(self, websocket: WebSocket, board_id: str) -> None:
         self.rooms[board_id].discard(websocket)
         count = len(self.rooms[board_id])
         if count == 0:
@@ -34,7 +34,9 @@ class ConnectionManager:
             })
         logger.info("WS disconnected from board %s (%d remaining)", board_id, count)
 
-    async def broadcast(self, board_id: str, message: dict, exclude: WebSocket | None = None):
+    async def broadcast(
+        self, board_id: str, message: dict, exclude: WebSocket | None = None
+    ) -> None:
         """Send a message to all connections in a board room."""
         if board_id not in self.rooms:
             return

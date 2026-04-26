@@ -20,12 +20,9 @@ const { showToast } = useToast()
 
 const cardCount = computed(() => props.cards.length)
 
-// vuedraggable needs a writable list — we sync via onChange
 const localCards = computed({
   get: () => [...props.cards],
-  set: () => {
-    // handled by onChange
-  },
+  set: () => {},
 })
 
 async function onChange(evt) {
@@ -53,7 +50,6 @@ async function onChange(evt) {
   }
 }
 
-// Column colors
 const colorMap = {
   green: 'border-t-emerald-400 bg-emerald-50/50',
   red: 'border-t-rose-400 bg-rose-50/50',

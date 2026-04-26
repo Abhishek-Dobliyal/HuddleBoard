@@ -1,9 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 
-const props = defineProps({
-  error: { type: String, default: '' },
-})
 const emit = defineEmits(['submit'])
 
 const password = ref('')

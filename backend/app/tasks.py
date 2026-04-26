@@ -7,7 +7,7 @@ from app.models import Board, utcnow
 logger = logging.getLogger(__name__)
 
 
-async def cleanup_expired_boards():
+async def cleanup_expired_boards() -> None:
     """Delete boards that have passed their expires_at time."""
     async with async_session() as session:
         result = await session.execute(
@@ -18,7 +18,7 @@ async def cleanup_expired_boards():
             logger.info("Cleaned up %d expired board(s)", result.rowcount)
 
 
-def run_cleanup():
+def run_cleanup() -> None:
     """Synchronous wrapper for APScheduler."""
     loop = asyncio.new_event_loop()
     try:
