@@ -101,26 +101,26 @@ async def websocket_endpoint(
         await websocket.close(code=WS_CLOSE_BOARD_EXPIRED, reason="Board has expired")
         return
 
-    # Accept the connection, then authenticate via first message
     await websocket.accept()
 
+    # Always consume the first auth message from the client
+    try:
+        raw = await asyncio.wait_for(
+            websocket.receive_text(), timeout=WS_AUTH_TIMEOUT_SECONDS,
+        )
+        auth_msg = json.loads(raw)
+    except (asyncio.TimeoutError, json.JSONDecodeError, Exception):
+        await websocket.close(code=WS_CLOSE_PASSWORD_REQUIRED, reason="Auth timeout")
+        return
+
+    if auth_msg.get("type") != "auth":
+        await websocket.close(code=WS_CLOSE_PASSWORD_REQUIRED, reason="Expected auth message")
+        return
+
+    admin_token = auth_msg.get("data", {}).get("adminToken")
+    password = auth_msg.get("data", {}).get("password")
+
     if board.password_hash:
-        try:
-            raw = await asyncio.wait_for(
-                websocket.receive_text(), timeout=WS_AUTH_TIMEOUT_SECONDS,
-            )
-            auth_msg = json.loads(raw)
-        except (asyncio.TimeoutError, json.JSONDecodeError, Exception):
-            await websocket.close(code=WS_CLOSE_PASSWORD_REQUIRED, reason="Auth timeout")
-            return
-
-        if auth_msg.get("type") != "auth":
-            await websocket.close(code=WS_CLOSE_PASSWORD_REQUIRED, reason="Expected auth message")
-            return
-
-        admin_token = auth_msg.get("data", {}).get("adminToken")
-        password = auth_msg.get("data", {}).get("password")
-
         is_admin = admin_token is not None and admin_token == board.admin_token
         if not is_admin:
             if not password or not verify_password(password, board.password_hash):

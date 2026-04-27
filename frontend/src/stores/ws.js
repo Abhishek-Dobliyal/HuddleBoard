@@ -28,15 +28,13 @@ export const useWsStore = defineStore('ws', () => {
       retryCount = 0
       clearReconnectTimer()
 
-      if (connectOpts.adminToken || connectOpts.password) {
-        ws.send(JSON.stringify({
-          type: 'auth',
-          data: {
-            adminToken: connectOpts.adminToken || null,
-            password: connectOpts.password || null,
-          },
-        }))
-      }
+      ws.send(JSON.stringify({
+        type: 'auth',
+        data: {
+          adminToken: connectOpts.adminToken || null,
+          password: connectOpts.password || null,
+        },
+      }))
 
       if (wasReconnect) {
         const boardStore = useBoardStore()
