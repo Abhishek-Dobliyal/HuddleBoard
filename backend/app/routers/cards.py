@@ -139,11 +139,12 @@ async def delete_card(
     x_board_password: str | None = Header(None),
     db: AsyncSession = Depends(get_db),
 ) -> dict[str, str]:
-    """Delete a card."""
+    """Delete a card (admin only)."""
     card = await get_card_with_board(card_id, db)
     assert_not_expired(card.column.board)
     assert_board_access(card.column.board, x_admin_token, x_board_password)
-    assert_writable(card.column.board, x_admin_token)
+    if not is_board_admin(card.column.board, x_admin_token):
+        raise HTTPException(status_code=403, detail="Only the board admin can delete cards")
 
     await db.delete(card)
     return {"detail": "Card deleted"}

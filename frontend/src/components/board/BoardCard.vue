@@ -123,18 +123,20 @@ async function handleDelete() {
           <button @click="startEdit" class="text-xs text-gray-400 hover:text-indigo-600 transition-colors cursor-pointer" title="Edit">
             <font-awesome-icon icon="pen" />
           </button>
-          <button
-            v-if="!showConfirmDelete"
-            @click="showConfirmDelete = true"
-            class="text-xs text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-            title="Delete"
-          >
-            <font-awesome-icon icon="trash" />
-          </button>
-          <div v-else class="flex items-center gap-1 animate__animated animate__fadeIn animate__faster">
-            <button @click="handleDelete" class="text-xs text-red-600 hover:text-red-700 font-medium cursor-pointer">Delete?</button>
-            <button @click="showConfirmDelete = false" class="text-xs text-gray-400 hover:text-gray-600 cursor-pointer">No</button>
-          </div>
+          <template v-if="boardStore.isAdmin">
+            <button
+              v-if="!showConfirmDelete"
+              @click="showConfirmDelete = true"
+              class="text-xs text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+              title="Delete"
+            >
+              <font-awesome-icon icon="trash" />
+            </button>
+            <div v-else class="flex items-center gap-1 animate__animated animate__fadeIn animate__faster">
+              <button @click="handleDelete" class="text-xs text-red-600 hover:text-red-700 font-medium cursor-pointer">Delete?</button>
+              <button @click="showConfirmDelete = false" class="text-xs text-gray-400 hover:text-gray-600 cursor-pointer">No</button>
+            </div>
+          </template>
         </div>
       </div>
     </div>
