@@ -179,8 +179,8 @@ async def websocket_endpoint(
 
     except WebSocketDisconnect:
         await manager.disconnect(websocket, board_id)
-    except Exception:
-        logger.error("WebSocket error on board %s", board_id, exc_info=True)
+    except Exception as e:
+        logger.error("WebSocket error on board %s: %s", board_id, e)
         await manager.disconnect(websocket, board_id)
     finally:
         heartbeat_task.cancel()

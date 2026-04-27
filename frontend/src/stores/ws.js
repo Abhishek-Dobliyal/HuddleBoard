@@ -28,7 +28,6 @@ export const useWsStore = defineStore('ws', () => {
       retryCount = 0
       clearReconnectTimer()
 
-      // Send auth credentials as first message (not in URL)
       if (connectOpts.adminToken || connectOpts.password) {
         ws.send(JSON.stringify({
           type: 'auth',
