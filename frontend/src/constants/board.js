@@ -5,7 +5,7 @@ export const TTL_DEFAULT = 24
 export const MAX_CUSTOM_COLUMNS = 4
 export const MIN_CUSTOM_COLUMNS = 1
 
-export const PASSWORD_MIN_LENGTH = 4
+export const PASSWORD_MIN_LENGTH = 6
 
 export const DEFAULT_AUTHOR = 'Anonymous'
 export const DEFAULT_TEMPLATE = 'retrospective'
