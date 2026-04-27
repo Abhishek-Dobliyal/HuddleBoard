@@ -33,8 +33,8 @@ if is_postgres:
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
+    pool_pre_ping=True,
     connect_args={"check_same_thread": False} if is_sqlite else pg_connect_args,
-    # Postgres connection pool settings
     **({} if is_sqlite else {
         "pool_size": int(os.getenv("DB_POOL_SIZE", "10")),
         "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "20")),

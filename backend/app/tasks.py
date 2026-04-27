@@ -8,10 +8,13 @@ logger = logging.getLogger(__name__)
 
 async def cleanup_expired_boards() -> None:
     """Delete boards that have passed their expires_at time."""
-    async with async_session() as session:
-        result = await session.execute(
-            delete(Board).where(Board.expires_at < utcnow())
-        )
-        await session.commit()
-        if result.rowcount > 0:
-            logger.info("Cleaned up %d expired board(s)", result.rowcount)
+    try:
+        async with async_session() as session:
+            result = await session.execute(
+                delete(Board).where(Board.expires_at < utcnow())
+            )
+            await session.commit()
+            if result.rowcount > 0:
+                logger.info("Cleaned up %d expired board(s)", result.rowcount)
+    except Exception as e:
+        logger.warning("Cleanup task failed (will retry next interval): %s", e)
