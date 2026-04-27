@@ -15,10 +15,22 @@ class ConnectionManager:
     async def connect(self, websocket: WebSocket, board_id: str) -> None:
         self.rooms[board_id].add(websocket)
         count = len(self.rooms[board_id])
+
+        # Send count directly to new user, then notify others
+        try:
+            await websocket.send_text(json.dumps({
+                "type": "user:joined",
+                "data": {"count": count},
+            }))
+        except Exception:
+            self.rooms[board_id].discard(websocket)
+            return
+
         await self.broadcast(board_id, {
             "type": "user:joined",
             "data": {"count": count},
-        })
+        }, exclude=websocket)
+
         logger.info("WS connected to board %s (%d users)", board_id, count)
 
     async def disconnect(self, websocket: WebSocket, board_id: str) -> None:
