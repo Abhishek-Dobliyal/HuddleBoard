@@ -9,6 +9,7 @@ import { STORAGE_KEY_ADMIN_PREFIX } from '../constants/board'
 import BoardColumn from '../components/board/BoardColumn.vue'
 import AdminPanel from '../components/ui/AdminPanel.vue'
 import PasswordModal from '../components/ui/PasswordModal.vue'
+import AdminTokenModal from '../components/ui/AdminTokenModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -18,19 +19,20 @@ const { copy } = useClipboard()
 
 const boardId = route.params.id
 const STORAGE_KEY = `${STORAGE_KEY_ADMIN_PREFIX}${boardId}`
-const adminToken = route.query.admin || sessionStorage.getItem(STORAGE_KEY) || null
 const needsPassword = ref(false)
 const passwordModalRef = ref(null)
 const showAdmin = ref(false)
+const showAdminLogin = ref(false)
+const adminLoginRef = ref(null)
+const adminLoginLoading = ref(false)
 const loadError = ref(null)
 
-if (adminToken) {
-  boardStore.setAdminToken(adminToken)
-  sessionStorage.setItem(STORAGE_KEY, adminToken)
-  if (route.query.admin) {
-    router.replace({ query: { ...route.query, admin: undefined } })
-  }
+function restoreAdminToken() {
+  const stored = localStorage.getItem(STORAGE_KEY)
+  if (stored) boardStore.setAdminToken(stored)
 }
+
+restoreAdminToken()
 
 const { display: countdownDisplay, isExpired } = useCountdown(
   computed(() => boardStore.expiresAt)
@@ -47,7 +49,7 @@ async function loadBoard(password = null) {
   try {
     await boardStore.fetchBoard(boardId, password)
     needsPassword.value = false
-    wsStore.connect(boardId, { adminToken, password })
+    wsStore.connect(boardId, { adminToken: boardStore.adminToken, password })
   } catch (err) {
     if (err.response?.status === 401) {
       needsPassword.value = true
@@ -59,6 +61,29 @@ async function loadBoard(password = null) {
     } else {
       loadError.value = err.response?.data?.detail || 'Failed to load board. Please check your connection and try again.'
     }
+  }
+}
+
+async function handleAdminLogin(token) {
+  adminLoginLoading.value = true
+  try {
+    boardStore.setAdminToken(token)
+    const data = await boardStore.fetchBoard(boardId, boardStore.boardPassword)
+
+    if (!data.is_admin) {
+      boardStore.setAdminToken(null)
+      nextTick(() => adminLoginRef.value?.setError('Invalid admin token'))
+      return
+    }
+
+    localStorage.setItem(STORAGE_KEY, token)
+    showAdminLogin.value = false
+    wsStore.connect(boardId, { adminToken: token, password: boardStore.boardPassword })
+  } catch {
+    boardStore.setAdminToken(null)
+    nextTick(() => adminLoginRef.value?.setError('Failed to verify token'))
+  } finally {
+    adminLoginLoading.value = false
   }
 }
 
@@ -151,6 +176,15 @@ onUnmounted(() => {
             Admin
           </button>
 
+          <button
+            v-else
+            @click="showAdminLogin = true"
+            class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer active:scale-95"
+            title="Login as admin"
+          >
+            <font-awesome-icon icon="key" />
+          </button>
+
           <span v-if="boardStore.isReadOnly" class="px-2 py-1 text-xs bg-amber-100 text-amber-700 rounded-full">
             <font-awesome-icon icon="eye" class="mr-1" />Read-only
           </span>
@@ -181,6 +215,15 @@ onUnmounted(() => {
       :board-id="boardId"
       :share-url="shareUrl"
       @close="showAdmin = false"
+    />
+
+    <AdminTokenModal
+      v-if="showAdminLogin"
+      ref="adminLoginRef"
+      mode="login"
+      :loading="adminLoginLoading"
+      @submit="handleAdminLogin"
+      @close="showAdminLogin = false"
     />
   </div>
   </div>

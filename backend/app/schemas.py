@@ -128,3 +128,4 @@ class BoardFull(BaseModel):
     board: BoardInfo
     columns: list[ColumnInfo]
     cards: list[CardInfo]
+    is_admin: bool = False

@@ -28,6 +28,7 @@ import {
   faPencil,
   faMagnifyingGlass,
   faTriangleExclamation,
+  faKey,
 } from '@fortawesome/free-solid-svg-icons'
 
 library.add(
@@ -35,7 +36,7 @@ library.add(
   faCopy, faGear, faXmark, faClock, faUsers, faChevronDown,
   faEye, faCheck, faArrowRight, faColumns,
   faRotate, faLightbulb, faPencil, faMagnifyingGlass,
-  faTriangleExclamation,
+  faTriangleExclamation, faKey,
 )
 
 const app = createApp(App)

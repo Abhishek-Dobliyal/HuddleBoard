@@ -58,6 +58,7 @@ export const useBoardStore = defineStore('board', () => {
       board.value = data.board
       columns.value = data.columns
       cards.value = data.cards
+      if (!data.is_admin) adminToken.value = null
       return data
     } finally {
       loading.value = false
@@ -167,7 +168,7 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   return {
-    board, columns, cards, loading, error, adminToken, onlineUsers,
+    board, columns, cards, loading, error, adminToken, boardPassword, onlineUsers,
     isAdmin, isReadOnly, boardTitle, expiresAt, columnsSorted,
     cardsByColumn, createBoard, fetchBoard, updateBoard, deleteBoard,
     addCard, updateCard, deleteCard, voteCard, moveCard,

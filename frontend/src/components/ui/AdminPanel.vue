@@ -31,8 +31,8 @@ function copyBoardId() {
   copy(props.boardId, 'Board ID copied!')
 }
 
-function copyAdminUrl() {
-  copy(`${props.shareUrl}?admin=${boardStore.adminToken}`, 'Admin link copied! Keep this private.')
+function copyAdminToken() {
+  copy(boardStore.adminToken, 'Admin token copied! Keep this private.')
 }
 
 async function toggleReadOnly() {
@@ -100,16 +100,16 @@ async function handleDelete() {
               <font-awesome-icon icon="copy" class="text-gray-300 ml-auto" />
             </button>
             <button
-              @click="copyAdminUrl"
+              @click="copyAdminToken"
               class="w-full text-left px-3 py-2 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors text-sm flex items-center gap-2 cursor-pointer active:scale-[0.98]"
             >
-              <font-awesome-icon icon="lock" class="text-indigo-400" />
-              <span class="truncate">Copy admin link</span>
+              <font-awesome-icon icon="key" class="text-indigo-400" />
+              <span class="truncate">Copy admin token</span>
               <font-awesome-icon icon="copy" class="text-indigo-300 ml-auto" />
             </button>
             <p class="text-xs text-amber-600 mt-1 px-1">
               <font-awesome-icon icon="triangle-exclamation" class="mr-1" />
-              Admin link is confidential. Only share with trusted people.
+              Keep this token private. Anyone with it gets admin access.
             </p>
           </div>
         </div>

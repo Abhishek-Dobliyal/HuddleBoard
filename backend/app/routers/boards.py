@@ -135,6 +135,7 @@ async def get_board(
         board=BoardInfo.from_board(board),
         columns=columns_info,
         cards=cards_info,
+        is_admin=bool(is_admin),
     )
 
 

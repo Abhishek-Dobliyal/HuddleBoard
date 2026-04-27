@@ -3,7 +3,8 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useBoardStore } from '../stores/board'
 import { useTypewriter } from '../composables/useTypewriter'
-import { TTL_MIN, TTL_MAX, TTL_DEFAULT, MAX_CUSTOM_COLUMNS, MIN_CUSTOM_COLUMNS, LIMITS, DEFAULT_TEMPLATE } from '../constants/board'
+import { TTL_MIN, TTL_MAX, TTL_DEFAULT, MAX_CUSTOM_COLUMNS, MIN_CUSTOM_COLUMNS, LIMITS, DEFAULT_TEMPLATE, STORAGE_KEY_ADMIN_PREFIX } from '../constants/board'
+import AdminTokenModal from '../components/ui/AdminTokenModal.vue'
 
 const router = useRouter()
 const boardStore = useBoardStore()
@@ -25,6 +26,7 @@ const password = ref('')
 const isReadOnly = ref(false)
 const isCreating = ref(false)
 const showAdvanced = ref(false)
+const createdBoard = ref(null)
 
 const templates = [
   { id: 'retrospective', name: 'Retrospective', columns: ['What went well', 'What to improve', 'Action items'], icon: 'rotate' },
@@ -76,16 +78,19 @@ async function handleCreate() {
 
     const data = await boardStore.createBoard(payload)
 
-    router.push({
-      name: 'board',
-      params: { id: data.board_id },
-      query: { admin: data.admin_token },
-    })
+    localStorage.setItem(`${STORAGE_KEY_ADMIN_PREFIX}${data.board_id}`, data.admin_token)
+    createdBoard.value = data
   } catch {
     // error already set in store
   } finally {
     isCreating.value = false
   }
+}
+
+function onTokenSaved() {
+  const { board_id } = createdBoard.value
+  createdBoard.value = null
+  router.push({ name: 'board', params: { id: board_id } })
 }
 
 const features = [
@@ -347,6 +352,13 @@ const features = [
       </div>
 
     </div>
+
+    <AdminTokenModal
+      v-if="createdBoard"
+      mode="display"
+      :token="createdBoard.admin_token"
+      @close="onTokenSaved"
+    />
   </div>
 </template>
 
