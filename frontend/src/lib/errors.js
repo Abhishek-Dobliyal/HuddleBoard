@@ -1,7 +1,8 @@
-/**
- * Extract a user-friendly error message from an API error.
- * Uses the server's detail message if available, otherwise falls back.
- */
 export function getErrorMessage(err, fallback = 'Something went wrong') {
-  return err?.response?.data?.detail || err?.response?.data?.error || fallback
+  const data = err?.response?.data
+  if (!data) return fallback
+  if (typeof data.detail === 'string') return data.detail
+  if (Array.isArray(data.detail)) return data.detail.map((e) => e.msg).join('. ')
+  if (Array.isArray(data)) return data.map((e) => e.msg).join('. ')
+  return data.error || fallback
 }
