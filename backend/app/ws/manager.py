@@ -13,7 +13,6 @@ class ConnectionManager:
         self.rooms: dict[str, set[WebSocket]] = defaultdict(set)
 
     async def connect(self, websocket: WebSocket, board_id: str) -> None:
-        await websocket.accept()
         self.rooms[board_id].add(websocket)
         count = len(self.rooms[board_id])
         await self.broadcast(board_id, {
