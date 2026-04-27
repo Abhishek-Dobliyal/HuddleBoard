@@ -72,6 +72,9 @@ export const useWsStore = defineStore('ws', () => {
     const { showToast } = useToast()
 
     switch (msg.type) {
+      case 'ping':
+        send('pong', {})
+        return
       case 'board:state':
         boardStore.board = msg.data.board
         boardStore.columns = msg.data.columns

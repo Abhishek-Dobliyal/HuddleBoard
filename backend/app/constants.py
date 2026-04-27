@@ -22,11 +22,13 @@ VALID_TEMPLATES = ("retrospective", "4ls", "custom")
 VALID_CARD_COLORS = ("yellow", "pink", "blue", "green", "purple")
 CUSTOM_COLUMN_COLORS = ("green", "blue", "red", "purple")
 
-# --- WebSocket close codes ---
+# --- WebSocket ---
 WS_CLOSE_PASSWORD_REQUIRED = 4001
 WS_CLOSE_BOARD_NOT_FOUND = 4004
 WS_CLOSE_BOARD_EXPIRED = 4010
 WS_AUTH_TIMEOUT_SECONDS = 10
+WS_HEARTBEAT_INTERVAL_SECONDS = 30
+WS_HEARTBEAT_TIMEOUT_SECONDS = 10
 
 # --- Database pool ---
 DB_POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "10"))

@@ -16,6 +16,7 @@ from slowapi.errors import RateLimitExceeded
 from app.constants import (
     WS_CLOSE_BOARD_NOT_FOUND, WS_CLOSE_BOARD_EXPIRED,
     WS_CLOSE_PASSWORD_REQUIRED, WS_AUTH_TIMEOUT_SECONDS,
+    WS_HEARTBEAT_INTERVAL_SECONDS, WS_HEARTBEAT_TIMEOUT_SECONDS,
 )
 from app.database import async_session, create_tables
 from app.limiter import limiter
@@ -127,15 +128,25 @@ async def websocket_endpoint(
                 return
 
     # Auth passed — add to room
-    board_id_str = board_id
-    self_rooms = manager.rooms
-    self_rooms[board_id_str].add(websocket)
-    count = len(self_rooms[board_id_str])
-    await manager.broadcast(board_id_str, {
-        "type": "user:joined",
-        "data": {"count": count},
-    })
-    logger.info("WS connected to board %s (%d users)", board_id_str, count)
+    await manager.connect(websocket, board_id)
+
+    async def heartbeat():
+        """Ping client periodically to detect dead connections."""
+        try:
+            while True:
+                await asyncio.sleep(WS_HEARTBEAT_INTERVAL_SECONDS)
+                try:
+                    await asyncio.wait_for(
+                        websocket.send_json({"type": "ping"}),
+                        timeout=WS_HEARTBEAT_TIMEOUT_SECONDS,
+                    )
+                except Exception:
+                    await websocket.close()
+                    break
+        except asyncio.CancelledError:
+            pass
+
+    heartbeat_task = asyncio.create_task(heartbeat())
 
     try:
         while True:
@@ -150,6 +161,9 @@ async def websocket_endpoint(
                 continue
 
             msg_type = message.get("type")
+            if msg_type == "pong":
+                continue
+
             msg_data = message.get("data", {})
 
             outgoing_type = WS_EVENT_MAP.get(msg_type)
@@ -168,6 +182,8 @@ async def websocket_endpoint(
     except Exception:
         logger.error("WebSocket error on board %s", board_id, exc_info=True)
         await manager.disconnect(websocket, board_id)
+    finally:
+        heartbeat_task.cancel()
 
 
 @app.get("/api/health")
